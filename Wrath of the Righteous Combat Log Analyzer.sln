@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.10
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wrath of the Righteous Combat Log Analyzer", "Wrath of the Righteous Combat Log Analyzer\Wrath of the Righteous Combat Log Analyzer.csproj", "{26CD76A1-CB44-4C62-A554-8AC7D207C704}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup1", "Setup1\Setup1.vdproj", "{3BDCEBC7-5566-46C3-8BA1-7B9DC98C22A5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoTR Test", "WoTR Test\WoTR Test.csproj", "{138F8264-EE50-4D75-B9B0-8C263F22AD53}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{26CD76A1-CB44-4C62-A554-8AC7D207C704}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26CD76A1-CB44-4C62-A554-8AC7D207C704}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26CD76A1-CB44-4C62-A554-8AC7D207C704}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26CD76A1-CB44-4C62-A554-8AC7D207C704}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BDCEBC7-5566-46C3-8BA1-7B9DC98C22A5}.Debug|Any CPU.ActiveCfg = Debug
+		{3BDCEBC7-5566-46C3-8BA1-7B9DC98C22A5}.Release|Any CPU.ActiveCfg = Release
+		{3BDCEBC7-5566-46C3-8BA1-7B9DC98C22A5}.Release|Any CPU.Build.0 = Release
+		{138F8264-EE50-4D75-B9B0-8C263F22AD53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{138F8264-EE50-4D75-B9B0-8C263F22AD53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{138F8264-EE50-4D75-B9B0-8C263F22AD53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{138F8264-EE50-4D75-B9B0-8C263F22AD53}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F37A44DA-AF53-43CE-889A-63E6DD82DAA3}
+	EndGlobalSection
+EndGlobal
