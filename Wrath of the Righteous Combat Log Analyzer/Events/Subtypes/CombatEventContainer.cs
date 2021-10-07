@@ -520,6 +520,13 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
         }
 
+        public void Force_Rebuild_Of_Character_Data()
+        {
+            _Children_Count_When_Characters_Last_Refreshed = -1;
+            _Characters.Clear();
+            Update_Characters_List();
+        }
+
         public void Update_Stats_Callback() // This is the callback function for when the stats recalc has completed.
         {
             _Stats_Updating_Async = false;

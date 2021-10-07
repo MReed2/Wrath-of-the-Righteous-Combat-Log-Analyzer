@@ -89,6 +89,11 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     curr_selected_event.Update_Display_UserControl(); // This will refresh the data, if required.
                 }
             }
+
+            if (MasterTreeView.SelectedItem == null)
+            {
+                _Root_TreeViewItem.IsSelected = true;
+            }
         }
 
         public void NeedToCalculateStats(CombatEventContainer sender, CombatStats inStatsToRecalc, CombatEventList inCombatEventList)
@@ -167,9 +172,16 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         private void ResetCurrentFile()
         {
-            if (_Last_File_Start_TreeView_Item == null) { InitRootNode(); }
+            if ((_Last_File_Start_TreeView_Item == null)||(_Last_File_Start_TreeView_Item==null)) { InitRootNode(); }
             else
             {
+                foreach (CombatEvent curr_event in ((CombatEventContainer)_Last_File_Start_TreeView_Item.Tag).Children)
+                {
+                    ((CombatEventContainer)_Root_TreeViewItem.Tag).Children.Remove(curr_event);
+                }
+                ((CombatEventContainer)_Root_TreeViewItem.Tag).Force_Rebuild_Of_Character_Data();
+                ((CombatEventContainer)_Root_TreeViewItem.Tag).Recalc_Stats_Immediately_If_needed();
+                
                 _Root_Event_Cnt -= _File_Event_Cnt;
                 _Root_Combat_Cnt -= _File_Combat_Cnt;
 

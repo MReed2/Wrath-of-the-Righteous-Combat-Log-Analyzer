@@ -318,69 +318,53 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 //<div style="margin-left: 150px">Attack result: 35 (roll: 15 + modifiers: 20)		Target's Armor Class: 24		Result: hit</div>
                 //<div style="margin-left: 150px">Attack result: Natural 20.		Target's Armor Class: 24.		Result: hit	</div>
                 //<div style="margin-left: 150px">Attack result: Natural 1.		Target's Armor Class: 37.		Result: critical miss</div>
+                //<div style="margin-left:  50px">Attack result: Natural 2, <b><u>1</u></b> [Misfortune].		Target's Armor Class: 28.		Result: critical miss</div>
                 if (line.Contains("Attack result:"))
                 {
+                    //Deal with <s>1</s> 20 (Mythic Trickster feat that turns 1s into 20s.  We want to discard the *20* and keep the 1, because that's what was rolled.
+
+                    line = Regex.Replace(line, @"<.>(\d*)<..> (\d*)", "$1");
+
                     if (line.Contains("Natural"))
-                    // I believe that this logic will fail in the following case:
-                    //   1) The attack roll is rolled twice (or more).
-                    //   2) The worst roll is kept.
-                    //   3) The best roll is a natural 20.
-                    // In this scenario, I have no idea how the string will be formatted.  Fingers crossed that it simply shows "20" in the list of
-                    // die rolls (rather than "Natural 20"), but...  Given the craziness of the formatting elsewhere, I'm very, very doubtful.
                     {
-                        //<div style="margin-left:  50px">Attack result: Natural 1.		Target's Armor Class: -2.		Result: critical miss</div>
+                        line = line.Replace("Natural ", "");
+
+                        //<div style="margin-left:  50px">Attack result: 1.		Target's Armor Class: -2.		Result: critical miss</div>
+                        //<div style="margin-left: 150px">Attack result: 20.		Target's Armor Class: 24.		Result: hit	</div>
+                        //<div style="margin-left: 150px">Attack result: 1.		Target's Armor Class: 37.		Result: critical miss</div>
+                        //<div style="margin-left:  50px">Attack result: 2, <b><u>1</u></b> [Misfortune].		Target's Armor Class: 28.		Result: critical miss</div>
+
                         Regex extract_attack_roll = new Regex(@"(.*?>).*?: (.*?).\t.*?: ([+-]?\d*?)\.?\s\s");
                         GroupCollection extract_attack_roll_results = extract_attack_roll.Match(line).Groups;
                         string attack_die_rolls = extract_attack_roll_results[2].Value;
                         _Target_AC = int.Parse(extract_attack_roll_results[3].Value);
                         line = extract_attack_roll.Replace(line, "$1");
 
-                        if (attack_die_rolls.Contains(",")) // this is *really* dubious
-                        {
-                            // No sample data, and I'm not sure this is even required -- given the other odd formatting, 
-                            // I suspect that even if you had multiple attack rolls, if the roll that was kept was a 20
-                            // (or 1) then the other rolls aren't recorded.  If they *are* recorded, I'm very dubious the
-                            // format is the same as for the single roll case (in particular, the "." that appears after
-                            // "Natural 20" or "Natural 1").  However it doesn't hurt anything to include it, so...
-                            attack_die_rolls = Regex.Replace(attack_die_rolls, @"(<.*?>)", "");
+                        if (attack_die_rolls.Contains(","))
+                        {   
+                            // 2, <b><u>1</u></b> [Misfortune]
+                            //attack_die_rolls = Regex.Replace(attack_die_rolls, @"(<.*?>)", "");
                             attack_die_rolls = Regex.Replace(attack_die_rolls, @"( \[.*?\])", "");
                             foreach (string num_str in attack_die_rolls.Split(','))
                             {
-                                if (num_str.Contains("Natural 1"))
+                                string html_removed_str = num_str;
+                                bool underlined = false;
+
+                                if (num_str.Contains("<"))
                                 {
-                                    _Attack_Die_Rolls.Add(new Die_Roll("Attack", _Character_Name, 1));
+                                    html_removed_str = Regex.Replace(num_str, @"(<.*?>)", ""); // remove all HTML tags
+                                    underlined = true;
                                 }
-                                else if (num_str.Contains("Natural 20"))
-                                {
-                                    _Attack_Die_Rolls.Add(new Die_Roll("Attack", _Character_Name, 20));
-                                }
-                                else if (line.Contains("Natural <s>1</s> 20")) // This is how the "1s turn into 20s" feat appears in the log.
-                                {
-                                    _Attack_Die_Rolls.Add(new Die_Roll("Critical Confirmation", _Character_Name, 1));
-                                }
-                                else
-                                {
-                                    _Attack_Die_Rolls.Add(new Die_Roll("Attack", _Character_Name, int.Parse(num_str.Trim())));
-                                }
+
+                                _Attack_Die_Rolls.Add(new Die_Roll("Attack", _Character_Name, int.Parse(html_removed_str.Trim())) { Underlined = underlined });
                             }
                         }
                         else
                         {
-                            if (attack_die_rolls.Contains("Natural 1"))
-                            {
-                                _Attack_Die_Rolls.Add(new Die_Roll("Attack", _Character_Name, 1));
-                            }
-                            else if (attack_die_rolls.Contains("Natural 20"))
-                            {
-                                _Attack_Die_Rolls.Add(new Die_Roll("Attack", _Character_Name, 20));
-                            }
-                            else if (attack_die_rolls.Contains("Natural <s>1</s> 20")) // This is how the "1s turn into 20s" feat appears in the log.
-                            {
-                                _Attack_Die_Rolls.Add(new Die_Roll("Attack", _Character_Name, 1));
-                            }
+                            _Attack_Die_Rolls.Add(new Die_Roll("Attack", _Character_Name, int.Parse(attack_die_rolls.Trim())));
                         }
                     }
-                    else
+                    else // Yes, we need to split the cases -- the lines without a Natural 20 / natural 1 contain text within parenthesis -- see below.
                     {
                         //<div style="margin-left:   0px"> Attack result: 32 (roll: 13 + modifiers: 28)		Target's Armor Class: 22		Result: hit</div>
                         //<div style="margin-left:  50px">Attack result: 32 (roll: 13, <b><u>4</u></b> [Touch of Chaos] + modifiers: 28)		Target's Armor Class: 22		Result: hit</div>
@@ -399,7 +383,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                             attack_die_rolls = Regex.Match(line, @"(.*?>).*?: (\d*?) .*?: (.*?)\[.*?: (\d*?)\).*?: (\d*?)\t\t").Groups[3].Value;
 
                             //13, <b><u>4</u></b> 
-                            // One or both of the entries will be underlyined.
+                            // One or both of the entries will be underlined
 
                             foreach (string num_str in attack_die_rolls.Split(','))
                             {
@@ -465,6 +449,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 //<div style="margin-left: 100px">		Critical confirmation result: Natural <s>1</s> 20.		Result: critical hit confirmed</div>
                 //<div style="margin-left: 100px">		Critical confirmation result: 1 (roll: 3 + modifiers: -2).		Result: critical hit not confirmed</div>
                 Source += line + "\n";
+
+                line = Regex.Replace(line, @"<.>(\d*)<..> (\d*)", "$1"); // Turn <s>1</s> 20 into a simple 1.  This may not be necessary (I have no sample data to indicate it is), but it is harmless if not required.
 
                 if (line.Contains("Natural 20"))  // Sigh.  The rules are ambigious, but (IMO) a Natural 20 shouldn't auto-hit on a critical confirmation roll.
                 {
