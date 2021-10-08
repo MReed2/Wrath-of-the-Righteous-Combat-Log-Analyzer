@@ -263,9 +263,12 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public void Process_Events(CombatEventList inEvents)
         {
-            foreach (CombatEvent curr_Event in inEvents)
+            lock (CombatLog_Parser.CombatLog)
             {
-                Process_Event(curr_Event);
+                foreach (CombatEvent curr_Event in inEvents)
+                {
+                    Process_Event(curr_Event);
+                }
             }
         }
 

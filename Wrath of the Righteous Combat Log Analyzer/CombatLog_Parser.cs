@@ -262,31 +262,35 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                             _outFileWriter.WriteLine(tmp_line);
 
                             CombatEventList new_log_entry = Parse_Line(tmp_line);
-                            foreach (CombatEvent new_event in new_log_entry)
-                            {
-                                if (new_event is CombatStartEvent)
-                                {
-                                    _Last_Start_Of_Combat = (CombatStartEvent)new_event;
-                                }
-                                else if (_Last_Start_Of_Combat != null)
-                                {
-                                    _Last_Start_Of_Combat.Children.Add(new_event);
-                                }
-                                else { throw new System.Exception("Invalid log -- log didn't start with a 'Combat Start' event"); }
 
-                                WriteDeDupFile(new_event);
-                                if ((_CombatLog.Log.Count > 3) && (new_event is SimpleEvent) && (((SimpleEvent)new_event).Subtype == "Death"))
+                            lock (CombatLog_Parser.CombatLog)
+                            {
+                                foreach (CombatEvent new_event in new_log_entry)
                                 {
-                                    Dispatch_Death((SimpleEvent)new_event);
+                                    if (new_event is CombatStartEvent)
+                                    {
+                                        _Last_Start_Of_Combat = (CombatStartEvent)new_event;
+                                    }
+                                    else if (_Last_Start_Of_Combat != null)
+                                    {
+                                        _Last_Start_Of_Combat.Children.Add(new_event);
+                                    }
+                                    else { throw new System.Exception("Invalid log -- log didn't start with a 'Combat Start' event"); }
+
+                                    WriteDeDupFile(new_event);
+                                    if ((_CombatLog.Log.Count > 3) && (new_event is SimpleEvent) && (((SimpleEvent)new_event).Subtype == "Death"))
+                                    {
+                                        Dispatch_Death((SimpleEvent)new_event);
+                                    }
+                                    num_total++;
+                                    if (new_event is AttackEvent) { num_of_attacks++; }
+                                    else if (new_event is DamageEvent) { num_of_damage++; }
+                                    else if (new_event is HealingEvent) { num_of_healing++; }
+                                    else if (new_event is InitiativeEvent) { num_of_initiative++; }
+                                    else if (new_event is SimpleEvent) { num_of_simple++; }
+                                    else { num_of_other++; }
+                                    OnNewCombatEvent?.Invoke(new_event, _Full_Path_And_Filename);
                                 }
-                                num_total++;
-                                if (new_event is AttackEvent) { num_of_attacks++; }
-                                else if (new_event is DamageEvent) { num_of_damage++; }
-                                else if (new_event is HealingEvent) { num_of_healing++; }
-                                else if (new_event is InitiativeEvent) { num_of_initiative++; }
-                                else if (new_event is SimpleEvent) { num_of_simple++; }
-                                else { num_of_other++; }
-                                OnNewCombatEvent?.Invoke(new_event, _Full_Path_And_Filename);
                             }
                         }
                     }
