@@ -69,30 +69,33 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         {
             StatusBar_Status_TextBox.Text = status_str;
 
-            _Root_TreeViewItem.IsLoading = false;
-            _Last_File_Start_TreeView_Item.IsLoading = false;
-            _Last_Combat_Start_TreeViewItem.IsLoading = false;
-            UpdateNamesOfKeyNodes();
-
-            if ((_Root_TreeViewItem != null) && (MasterTreeView.SelectedItem == _Root_TreeViewItem))
+            if (_Root_TreeViewItem != null)
             {
-                CombatEventContainer tmp = (CombatEventContainer)_Root_TreeViewItem.Tag;
-                tmp.Get_UserControl_For_Display().IsEnabled = true;
-            }
+                _Root_TreeViewItem.IsLoading = false;
+                _Last_File_Start_TreeView_Item.IsLoading = false;
+                _Last_Combat_Start_TreeViewItem.IsLoading = false;
+                UpdateNamesOfKeyNodes();
 
-            if (MasterTreeView.SelectedItem != null)
-            {
-                LoadingAwareTreeViewItem curr_selected_itm = (LoadingAwareTreeViewItem)MasterTreeView.SelectedItem;
-                CombatEvent curr_selected_event = (CombatEvent)curr_selected_itm.Tag;
-                if (curr_selected_event is CombatEventContainer)
+                if (MasterTreeView.SelectedItem == _Root_TreeViewItem)
                 {
-                    curr_selected_event.Update_Display_UserControl(); // This will refresh the data, if required.
+                    CombatEventContainer tmp = (CombatEventContainer)_Root_TreeViewItem.Tag;
+                    tmp.Get_UserControl_For_Display().IsEnabled = true;
                 }
-            }
 
-            if (MasterTreeView.SelectedItem == null)
-            {
-                _Root_TreeViewItem.IsSelected = true;
+                if (MasterTreeView.SelectedItem != null)
+                {
+                    LoadingAwareTreeViewItem curr_selected_itm = (LoadingAwareTreeViewItem)MasterTreeView.SelectedItem;
+                    CombatEvent curr_selected_event = (CombatEvent)curr_selected_itm.Tag;
+                    if (curr_selected_event is CombatEventContainer)
+                    {
+                        curr_selected_event.Update_Display_UserControl(); // This will refresh the data, if required.
+                    }
+                }
+
+                if (MasterTreeView.SelectedItem == null)
+                {
+                    _Root_TreeViewItem.IsSelected = true;
+                }
             }
         }
 

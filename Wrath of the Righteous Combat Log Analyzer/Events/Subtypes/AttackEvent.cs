@@ -245,6 +245,47 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         {
             get { return _Critical_Confirmation_Rolls; }
         }
+
+        private List<Die_Roll> Parse_Comma_List(string inLst, string die_roll_reason, string die_roll_char_name, int die_roll_num_of_sides, int die_roll_num_of_times, int die_roll_bonus, int die_roll_target)
+        {
+            string[] inArray = inLst.Split(',');
+            if (inArray.GetUpperBound(0)==0) { throw new System.Exception("In Parse_Comma_List with input \"" + inLst + "\", no comma found."); }
+
+            List<Die_Roll> rtn = new List<Die_Roll>();
+            for (int x=0; x<=inArray.GetUpperBound(0);x++)
+            {
+                if (inArray[x].Contains("<"))
+                {
+                    rtn.Add(
+                        new Die_Roll(
+                            die_roll_reason, 
+                            die_roll_char_name, 
+                            int.Parse(Regex.Replace(inArray[x], @"(<.*?>)", "")), 
+                            die_roll_num_of_sides, 
+                            die_roll_num_of_times, 
+                            die_roll_bonus)
+                        {
+                            Underlined = true,
+                            Target = die_roll_target
+                        } );
+                }
+                else
+                {
+                    rtn.Add(
+                        new Die_Roll(
+                            die_roll_reason,
+                            die_roll_char_name,
+                            int.Parse(inArray[x]),
+                            die_roll_num_of_sides,
+                            die_roll_num_of_times,
+                            die_roll_bonus)
+                        {
+                            Target = die_roll_target
+                        } );
+                }
+            }
+            return rtn;
+        }
         
         public override List<Die_Roll> Parse(string line)
         {
@@ -301,17 +342,11 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                         //34, 34 [Blind Fight]
                         concealment_results = Regex.Replace(concealment_results, @"( \[.*?\])", "");
                         //34, 34
-                        foreach (string num_str in concealment_results.Split(','))
-                        {
-                            Die_Roll tmp_Die_Roll = new Die_Roll("Concealment", _Character_Name, int.Parse(num_str), 100, 1);
-                            tmp_Die_Roll.Target = _Concealment_Miss_Chance;
-                            _Concealment_Die_Rolls.Add(tmp_Die_Roll);
-                        }
+                        _Concealment_Die_Rolls.AddRange(Parse_Comma_List(concealment_results, "Concealment", _Character_Name, 100, 1, 0, _Concealment_Miss_Chance));
                     }
                     else
                     {
-                        Die_Roll tmp_Die_Roll = new Die_Roll("Concealment", _Character_Name, int.Parse(concealment_results), 100, 1);
-                        tmp_Die_Roll.Target = _Concealment_Miss_Chance;
+                        Die_Roll tmp_Die_Roll = new Die_Roll("Concealment", _Character_Name, int.Parse(concealment_results), 100, 1) { Target = _Concealment_Miss_Chance };
                         _Concealment_Die_Rolls.Add(tmp_Die_Roll);
                     }
                 }
@@ -343,25 +378,12 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                         if (attack_die_rolls.Contains(","))
                         {   
                             // 2, <b><u>1</u></b> [Misfortune]
-                            //attack_die_rolls = Regex.Replace(attack_die_rolls, @"(<.*?>)", "");
                             attack_die_rolls = Regex.Replace(attack_die_rolls, @"( \[.*?\])", "");
-                            foreach (string num_str in attack_die_rolls.Split(','))
-                            {
-                                string html_removed_str = num_str;
-                                bool underlined = false;
-
-                                if (num_str.Contains("<"))
-                                {
-                                    html_removed_str = Regex.Replace(num_str, @"(<.*?>)", ""); // remove all HTML tags
-                                    underlined = true;
-                                }
-
-                                _Attack_Die_Rolls.Add(new Die_Roll("Attack", _Character_Name, int.Parse(html_removed_str.Trim())) { Underlined = underlined });
-                            }
+                            _Attack_Die_Rolls.AddRange(Parse_Comma_List(attack_die_rolls, "Attack", _Character_Name, 20, 1, 0, -999));
                         }
                         else
                         {
-                            _Attack_Die_Rolls.Add(new Die_Roll("Attack", _Character_Name, int.Parse(attack_die_rolls.Trim())));
+                            _Attack_Die_Rolls.Add(new Die_Roll("Attack", _Character_Name, int.Parse(attack_die_rolls), 20, 1, 0));
                         }
                     }
                     else // Yes, we need to split the cases -- the lines without a Natural 20 / natural 1 contain text within parenthesis -- see below.
@@ -385,30 +407,11 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                             //13, <b><u>4</u></b> 
                             // One or both of the entries will be underlined
 
-                            foreach (string num_str in attack_die_rolls.Split(','))
-                            {
-                                Die_Roll tmp_roll = new Die_Roll("Attack", Character_Name, -1); // Placeholder die roll value
-
-                                if (num_str.Contains("<")) // it contains html tags, so it is underlined, as well as bold
-                                {
-                                    tmp_roll.Roll = int.Parse(Regex.Replace(num_str, @"<.?.?>", ""));
-                                    tmp_roll.Underlined = true;
-                                }
-                                else
-                                {
-                                    tmp_roll.Roll = int.Parse(num_str);
-                                }
-
-                                _Attack_Die_Rolls.Add(tmp_roll);
-                            }
+                            _Attack_Die_Rolls.AddRange(Parse_Comma_List(attack_die_rolls, "Attack", _Character_Name, 20, 1, 0, _Target_AC));
                         }
                         else
                         {
-                            _Attack_Die_Rolls.Add(new Die_Roll("Attack", _Character_Name, int.Parse(attack_die_rolls.Trim())));
-                        }
-                        foreach (Die_Roll tmp_Die_Roll in _Attack_Die_Rolls)
-                        {
-                            tmp_Die_Roll.Target = _Target_AC - Attack_Bonus;
+                            _Attack_Die_Rolls.Add(new Die_Roll("Attack", _Character_Name, int.Parse(attack_die_rolls), 20, 1, 0) { Target = _Target_AC - _Attack_Bonus });
                         }
                         line = extract_attack_roll.Replace(line, "$1");
                     }
@@ -448,33 +451,64 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 //<div style="margin-left: 100px">		Critical confirmation result: Natural 20.		Result: critical hit confirmed</div>
                 //<div style="margin-left: 100px">		Critical confirmation result: Natural <s>1</s> 20.		Result: critical hit confirmed</div>
                 //<div style="margin-left: 100px">		Critical confirmation result: 1 (roll: 3 + modifiers: -2).		Result: critical hit not confirmed</div>
+                //<div style="margin-left: 100px">		Critical confirmation result: 34 (roll: <b><u>13</u></b>, <b><u>13</u></b> [Misfortune] + modifiers: 21).		Result: critical hit confirmed</div>
                 Source += line + "\n";
 
-                line = Regex.Replace(line, @"<.>(\d*)<..> (\d*)", "$1"); // Turn <s>1</s> 20 into a simple 1.  This may not be necessary (I have no sample data to indicate it is), but it is harmless if not required.
-
-                if (line.Contains("Natural 20"))  // Sigh.  The rules are ambigious, but (IMO) a Natural 20 shouldn't auto-hit on a critical confirmation roll.
+                line = Regex.Replace(line, @"<.>(\d*)<..> (\d*)", "$1"); // Turn <s>1</s> 20 into a simple 1.
+                Match critical_hit_conf_match = Regex.Match(line, @".*?t: (\d*?) .*?: (\d*?) .*?: ([+-]?\d*?)\).*?: (.*?)<");
+                if (critical_hit_conf_match.Success)
                 {
-                    _Critical_Confirmation_Rolls.Add(new Die_Roll("Critical Confirmation", _Character_Name, 20));
+                    _Net_Critical_Confirmation_Value = int.Parse(critical_hit_conf_match.Groups[1].Value);
+                    _Critical_Confirmation_Rolls.Add(new Die_Roll("Critical Confirmation", _Character_Name, int.Parse(critical_hit_conf_match.Groups[2].Value)));
+                    _Critical_Confirmation_Bonus = int.Parse(critical_hit_conf_match.Groups[3].Value);
                 }
-                else if (line.Contains("Natural 1")) // Just in case -- if a natural 20 autohits, then a natural 1 should automiss.
+                else if (line.Contains("Natural"))
                 {
-                    _Critical_Confirmation_Rolls.Add(new Die_Roll("Critical Confirmation", _Character_Name, 1));
+                    // _Net_Critical_Confirmation_Value = -999;  These are default values, so leave them alone.
+                    // _Critical_Confirmation_Bonus = -999;
+                    line = line.Replace("Natural ", "");
+                    critical_hit_conf_match = Regex.Match(line, @".*?: (\d*)\..*?: (.*?)<");
+                    if (critical_hit_conf_match.Success) // Only a single roll
+                    {
+                        _Critical_Confirmation_Rolls.Add(new Die_Roll("Critical Confirmation", _Character_Name, int.Parse(critical_hit_conf_match.Groups[1].Value)));
+                    }
+                    else
+                    {
+                        //Assumed, based on how attacks work, but no sample data.  Note that the word "Natural" has been removed by this point.
+                        //The following is a guess-estimate of what this sort of line should look like.
+                        //<div style="margin-left: 100px">		Critical confirmation result: 2, <b><u>1</u></b> [Misfortune].		Result: critical hit confirmed</div>
+                        if (line.Contains(","))
+                        {
+                            critical_hit_conf_match = Regex.Match(line, @">.*?: (.*?) \[.*?: (.*?)<");
+                            if (critical_hit_conf_match.Success)
+                            {
+                                _Critical_Confirmation_Rolls.AddRange(Parse_Comma_List(critical_hit_conf_match.Groups[1].Value, "Critical Confirmation", _Character_Name, 20, 1, 0, -999));
+                            }
+                            else { throw new System.Exception("Unable to parse critical hit confirmation line (w/ 'Natural' removed) \"" + line + "\""); }
+                        }
+                        else { throw new System.Exception("Unable to parse critical hit confirmation line (w/ 'Natural' removed) \"" + line + "\""); }
+                    }
                 }
-                else if (line.Contains("Natural <s>1</s> 20")) // This is how the "1s turn into 20s" feat appears in the log.
-                {
-                    _Critical_Confirmation_Rolls.Add(new Die_Roll("Critical Confirmation", _Character_Name, 1));
+                else if (line.Contains(","))
+                { //<div style="margin-left: 100px">		Critical confirmation result: 34 (roll: <b><u>13</u></b>, <b><u>13</u></b> [Misfortune] + modifiers: 21).		Result: critical hit confirmed</div>
+                    critical_hit_conf_match = Regex.Match(line, @">.*?: (.*?) .*?: (.*?)\[.*?: (\d*).*?: (.*?)<");
+                    if (critical_hit_conf_match.Success)
+                    {
+                        _Net_Critical_Confirmation_Value = int.Parse(critical_hit_conf_match.Groups[1].Value);
+                        _Critical_Confirmation_Bonus = int.Parse(critical_hit_conf_match.Groups[3].Value);
+                        _Critical_Confirmation_Rolls.AddRange(
+                            Parse_Comma_List(critical_hit_conf_match.Groups[2].Value,
+                            "Critical Confirmation",
+                            _Character_Name,
+                            20,
+                            1,
+                            0,
+                            _Target_AC - _Critical_Confirmation_Bonus)
+                            );
+                    }
+                    else { throw new System.Exception("Unable to parse critical hit confirmation line \"" + line + "\""); }
                 }
-                else 
-                {
-                    GroupCollection critical_hit_groups = Regex.Match(line, @".*?t: (\d*?) .*?: (\d*?) .*?: ([+-]?\d*?)\).*?: (.*?)<").Groups;
-                    _Net_Critical_Confirmation_Value = int.Parse(critical_hit_groups[1].Value);
-                    _Critical_Confirmation_Rolls.Add(new Die_Roll("Critical Confirmation", _Character_Name, int.Parse(critical_hit_groups[2].Value)));
-                    _Critical_Confirmation_Bonus = int.Parse(critical_hit_groups[3].Value);
-                }
-                foreach (Die_Roll tmp_Die_Roll in _Critical_Confirmation_Rolls)
-                {
-                    tmp_Die_Roll.Target = _Target_AC - _Critical_Confirmation_Bonus;
-                }
+                else { throw new System.Exception("Unable to parse critical hit confirmation line \"" + line + "\""); }
             }
             else if (line.Contains("Attack Bonus:")&&(!line.Contains("Base Attack Bonus")))
             {
