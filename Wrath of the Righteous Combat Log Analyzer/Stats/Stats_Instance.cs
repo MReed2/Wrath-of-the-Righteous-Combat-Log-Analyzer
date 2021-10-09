@@ -588,11 +588,12 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("Start Cumulative Binomial Distribution, {0}, {1}, {2} iterations", trials, successes, (inc_by == -1 ? successes : (bound - successes)));
+                // System.Diagnostics.Debug.WriteLine("Start Cumulative Binomial Distribution, {0}, {1}, {2} iterations", trials, successes, (inc_by == -1 ? successes : (bound - successes)));
                 for (int x = successes; x != bound; x = x + inc_by)
                 {
                     current_rslt = Binomial_Probability(trials, x, chance_of_successes);
-                    System.Diagnostics.Debug.WriteLine("\tChance of {0} hits in {1} trials is {2:P4}", x, trials, current_rslt);
+                    //System.Diagnostics.Debug.WriteLine("\tChance of {0} hits in {1} trials is {2:P4}", x, trials, current_rslt);
+                    if (current_rslt < 0.0000001) { break; }
                     if (prev_rslt != 0)
                     {
                         if (current_rslt > prev_rslt)

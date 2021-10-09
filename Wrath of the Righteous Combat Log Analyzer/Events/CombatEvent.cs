@@ -20,6 +20,24 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private Char_Enum _Character_Type = Char_Enum.Unknown;
         private string _Friendly_Name = "";
         private CombatEventList _Children = new CombatEventList();
+        private int _Cached_Source_Hashcode = 0;
+        private int _Cached_Source_String_Length = 0;
+
+        public int Cached_Source_Hashcode
+        {
+            get
+            {
+                if ((_Cached_Source_String_Length == _Source.Length) && (_Cached_Source_Hashcode != 0)) { return _Cached_Source_Hashcode; }
+                else
+                {
+                    _Cached_Source_Hashcode = _Source.GetHashCode();
+                    _Cached_Source_String_Length = _Source.Length;
+                    return _Cached_Source_Hashcode;
+                }
+            }
+        }
+
+        
         
         public Char_Enum Character_Type
         {

@@ -19,6 +19,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private int _Raw_Damage = 0;
         private string _Damage_Source = "";
         private bool _Sucessful_Save = false;
+        private bool _Is_Maximized = false;
         private List<Die_Roll> _Damage_Dice = new List<Die_Roll>();
 
         private bool _init_done = false;
@@ -66,11 +67,13 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             get { return _Damage_Adjective; }
         }
 
+        public bool Is_Maximized { get => _Is_Maximized; }
+
         public DamageEvent(int inID, string line):base(inID, line) { }
 
         public override List<Die_Roll> Parse(string line)
         {
-
+            if (line.Contains("(Maximized)")) { _Is_Maximized = true; }
             if (line.Contains("deals")&&line.Contains("damage")&&(!_init_done))
             {
                 //<div style="margin-left:   0px"><b><b><span style="color:#224863">Wenduag_Companion[c2c0dfd3]</span></b></b> deals <b>15</b> damage (reduced) to <b><b><span style="color:#262626">Zerieks[1507b0b0]</span></b></b>.</div>

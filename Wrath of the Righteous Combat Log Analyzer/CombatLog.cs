@@ -9,6 +9,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
     class CombatLog
     {
         private CombatEventList _Log = new CombatEventList();
+        private CombatEventList _Current_Combat = new CombatEventList();
         private CombatStats _Stats = new CombatStats();
         private CombatEvent _Current_Event = null;
         private int _Current_Mode = 0;
@@ -36,6 +37,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         public void ClearAll()
         {
             _Log.Clear();
+            _Current_Combat.Clear();
             _Stats.Recalculate_Stats(_Log);
         }
 
@@ -67,15 +69,21 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
                 if (_Current_Event != null) // The previous event is completed, so add it to the database.
                 {
-                    if (DupCheck(_Current_Event, _Log) != null)
+                    if (DupCheck(_Current_Event, _Current_Combat) != null)
                     {
                         // This is a duplicate, so discard it.
                         _Dup_Count++;
                     }
                     else
                     {
+                        if (_Current_Event is CombatStartEvent)
+                        {
+                            _Current_Combat = new CombatEventList();
+                        }
+                        _Current_Combat.Add(_Current_Event);
                         _Log.Add(_Current_Event);
                         rtn_event.Add(_Current_Event);
+                        
                         _Stats.Process_Event(_Current_Event);
                     }
                     _Current_Event = null;
@@ -192,34 +200,13 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         private CombatEvent DupCheck(CombatEvent event1, CombatEvent event2)
         {
-            if (event1 == event2)
-            {
-                return null;
-            }
-            if (event1.GetType() != event2.GetType())
-            {
-                return null;
-            }
-            else if (event1 is SimpleEvent)
-            {
-                return null;
-            }
-            else if (((event1 is DamageEvent) && (event1.Source.Contains("(Maximized)"))) || ((event2.Source.Contains("(Maximized)"))))
-            {
-                return null;
-            }
-            else if (event1.Source.GetHashCode() != event2.Source.GetHashCode())
-            {
-                return null;
-            }
-            else if (event1.Source != event2.Source)
-            {
-                return null;
-            }
-            else
-            {
-                return event1;
-            }
+            if (event1 == event2) { return null; }
+            else if (event1.GetType() != event2.GetType()) { return null; }
+            else if ((event1 is SimpleEvent)||(event1 is CombatStartEvent)) { return null; }
+            else if ((event1 is DamageEvent) && ((DamageEvent)event1).Is_Maximized) { return null; }
+            else if (event1.Cached_Source_Hashcode != event2.Cached_Source_Hashcode) { return null; }
+            else if (event1.Source != event2.Source) { return null; }
+            else { return event1; }
         }
 
         private CombatEvent DupCheck(CombatEvent event1, CombatEventList event2List)
