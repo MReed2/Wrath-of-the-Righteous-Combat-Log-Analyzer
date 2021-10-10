@@ -9,6 +9,11 @@ Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup1", "Setup1\Setup1.vdp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoTR Test", "WoTR Test\WoTR Test.csproj", "{138F8264-EE50-4D75-B9B0-8C263F22AD53}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B6CEA3DA-88EE-43E2-8DAF-D5841B66B571}"
+	ProjectSection(SolutionItems) = preProject
+		combatLog SampleData.zip = combatLog SampleData.zip
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
