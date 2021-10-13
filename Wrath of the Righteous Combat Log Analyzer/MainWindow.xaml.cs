@@ -46,6 +46,15 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             CombatLog_Parser.OnLoadProgress += CombatLog_Parser_OnLoadProgress;
             CombatLog_Parser.OnCurrentFileChanged += CombatLog_Parser_OnCurrentFileChanged;
             Closed += new EventHandler(OnClosed);
+
+            string default_file = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            default_file += @"..\..\locallow\owlcat Games\pathfinder wrath Of The Righteous\combatLog.txt";
+            if (System.IO.File.Exists(default_file))
+            {
+                string[] default_files = { default_file };
+
+                CombatLog_Parser.Spawn_Parse(default_files);
+            }
         }
 
         private void OnClosed(object sender, EventArgs e)
