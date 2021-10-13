@@ -36,9 +36,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 }
             }
         }
-
-        
-        
+      
         public Char_Enum Character_Type
         {
             get
@@ -46,6 +44,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 if (_Character_Type == Char_Enum.Unknown)
                 {
                     if (Character_Name.Contains("Companion") || (Character_Name.Contains("Player_Unit")) || (Character_Name.Contains("AneviaTirabade"))) { return Char_Enum.Friendly; }
+                    else if (Character_Name.Contains("Summoner")) { return Char_Enum.Hostile; }
                     else if (Character_Name.Contains("Summon")) { return Char_Enum.Summon; }
                     else { return Char_Enum.Hostile; }
                 }
