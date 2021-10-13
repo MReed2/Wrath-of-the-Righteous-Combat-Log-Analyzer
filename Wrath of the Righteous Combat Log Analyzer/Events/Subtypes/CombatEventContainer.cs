@@ -73,12 +73,13 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             if ((_Children_Count_When_Characters_Last_Refreshed != Children.Count)||(_Children_Changed))
             {
+                //Parallel.ForEach(Children, (curr_event) =>  Can't do this in parallel, because the contents of the collection change in the loop.
                 foreach (CombatEvent curr_event in Children)
                 {
-                    if (curr_event is CombatStartEvent) {  }
-                    else if ( (curr_event is SimpleEvent) && (((SimpleEvent)curr_event).Subtype != "Death") ) { }
+                    if (curr_event is CombatStartEvent) { }
+                    else if ((curr_event is SimpleEvent) && (((SimpleEvent)curr_event).Subtype != "Death")) { }
                     else { _Characters.Add(new CharacterListItem(curr_event)); } // CharacterListItem and CharacterList manage duplicate entries -- no need to do so here
-                }
+                }//);
 
                 _Children_Count_When_Characters_Last_Refreshed = Children.Count;
                 _Children_Changed = false;

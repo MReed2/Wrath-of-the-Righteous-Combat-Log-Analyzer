@@ -324,11 +324,12 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             const double chance_of_rolling_a_1 = (1.0 / 20.0);
 
-            for (int x = 1; x < 21; x++)
+            Parallel.For(1, 21, 
+                (x, state) => 
             {
                 _Frequency_Analysis[x, 1] += System.String.Format(" ({0:+###;-###;0})", _D20s[x] - (d20s_total / 20));
                 _Frequency_Analysis[x, 2] = Cumulative_Binomial_Probability(d20s_total, _D20s[x], chance_of_rolling_a_1).ToString("P2");
-            }
+            } );
 
             _Frequency_Analysis[21, 2] = Cumulative_Binomial_Probability(d20s_total, (d20s_total / 20), chance_of_rolling_a_1).ToString("P2");
 

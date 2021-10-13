@@ -315,7 +315,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public void Build_Tables()
         {
-            foreach (Stats_Instance curr_stat in _Stats_Categories) { curr_stat.Build_Analysis(); }
+            Parallel.ForEach(_Stats_Categories, (curr_stat) => { curr_stat.Build_Analysis(); });
         }
 
         public void Build_Tables(System.ComponentModel.BackgroundWorker bw)
