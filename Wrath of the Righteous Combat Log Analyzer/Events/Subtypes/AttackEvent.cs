@@ -8,12 +8,13 @@ using System.Windows.Controls;
 
 namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 {
-    class AttackEvent : CombatEvent
+    public class AttackEvent : CombatEvent
     {
         private string _Source_Character_Name = "";
         private string _Character_Name = "";
         private string _Source_Target_Character_Name = "";
         private string _Target_Character_Name = "";
+        private Char_Enum _Guess_Target_Character_Type = Char_Enum.Really_Unknown;
         private string _Weapon = "";
 
         private int _Attack_Num = 1;
@@ -58,7 +59,9 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             set { _Character_Name = value; }
         }
         
-        public string Source_Target_Character_Name { get => _Source_Character_Name; }
+        public string Source_Target_Character_Name { get => _Source_Target_Character_Name; }
+
+        public Char_Enum Guess_Target_Character_Type { get => _Guess_Target_Character_Type; set => _Guess_Target_Character_Type = value; }
 
         public string Target_Character_Name
         {
@@ -303,7 +306,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 _Character_Name = attack_hdr[1].Value;
                 _Source_Character_Name = attack_hdr[1].Value;
                 _Target_Character_Name = attack_hdr[2].Value;
-                _Source_Target_Character_Name = attack_hdr[3].Value;
+                _Source_Target_Character_Name = attack_hdr[2].Value;
                 _Weapon = attack_hdr[3].Value;
                 _Attack_Success = (attack_hdr[4].Value.ToLower().Contains("hit"));
                 _Sneak_Attack = (attack_hdr[4].Value.ToLower().Contains("sneak attack"));

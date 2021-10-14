@@ -230,7 +230,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             _Consecutive_Idle_Parser_Loops = 0;
         }
 
-        static private CombatStartEvent _Last_Start_Of_Combat = null;
+        static private CombatStartEvent _Curr_Start_Of_Combat = null;
+        static private CombatStartEvent _Prev_Start_Of_Combat = null;
 
         static public void Parse()
         {
@@ -269,11 +270,18 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                                 {
                                     if (new_event is CombatStartEvent)
                                     {
-                                        _Last_Start_Of_Combat = (CombatStartEvent)new_event;
+                                        if (_Prev_Start_Of_Combat != null)
+                                        {
+                                            _Curr_Start_Of_Combat.Update_Smarter_Guesses_Character_Types();
+                                            _Curr_Start_Of_Combat.Update_Reload(_Prev_Start_Of_Combat);
+                                        }
+
+                                        _Prev_Start_Of_Combat = _Curr_Start_Of_Combat;
+                                        _Curr_Start_Of_Combat = (CombatStartEvent)new_event;
                                     }
-                                    else if (_Last_Start_Of_Combat != null)
+                                    else if (_Curr_Start_Of_Combat != null)
                                     {
-                                        _Last_Start_Of_Combat.Children.Add(new_event);
+                                        _Curr_Start_Of_Combat.Children.Add(new_event);
                                     }
                                     else { throw new System.Exception("Invalid log -- log didn't start with a 'Combat Start' event"); }
 

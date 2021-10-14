@@ -97,6 +97,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
                 GroupCollection damage_header = Regex.Match(line, @"(?:.*?\x22>){2}(.*?]).*>(\d*)<").Groups;
                 _Character_Name = damage_header[1].Value;
+                _Source_Character_Name = damage_header[1].Value;
                 _Damage = int.Parse(damage_header[2].Value);
                 _Target_Character_Name = damage_header[1].Value; // Target is the same as the source.
             }

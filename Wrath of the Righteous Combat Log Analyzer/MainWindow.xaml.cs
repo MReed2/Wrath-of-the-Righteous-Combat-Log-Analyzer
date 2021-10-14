@@ -213,7 +213,18 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             if (_Last_File_Start_TreeView_Item != null)
             { _Last_File_Start_TreeView_Item.Header = Regex.Replace((string)_Last_File_Start_TreeView_Item.Header, @"(\(.*\))", "") + String.Format("({0} Combats, {1} Events)", _File_Combat_Cnt, _File_Event_Cnt); }
             if (_Last_Combat_Start_TreeViewItem != null)
-            { _Last_Combat_Start_TreeViewItem.Header = Regex.Replace((string)_Last_Combat_Start_TreeViewItem.Header, @"(\(.*\))", "") + String.Format("({0} Events)", _Combat_Event_Cnt); }
+            {
+                _Last_Combat_Start_TreeViewItem.Header = Regex.Replace((string)_Last_Combat_Start_TreeViewItem.Header, @"(\(.*\))", "") + 
+                    String.Format
+                    (
+                        "({0} Events, {1} / {2} / {3} / {4})", 
+                        _Combat_Event_Cnt,
+                        ((CombatStartEvent)_Last_Combat_Start_TreeViewItem.Tag).Strict_Full_Reload_Cnt,
+                        ((CombatStartEvent)_Last_Combat_Start_TreeViewItem.Tag).Loose_Full_Reload_Cnt,
+                        ((CombatStartEvent)_Last_Combat_Start_TreeViewItem.Tag).Strict_Starting_Reload_Cnt,
+                        ((CombatStartEvent)_Last_Combat_Start_TreeViewItem.Tag).Loose_Starting_Reload_Cnt
+                    );
+            }
         }
 
         private void AddNewItemToMasterTreeView(CombatEvent newCombatEvent, string inFilename)

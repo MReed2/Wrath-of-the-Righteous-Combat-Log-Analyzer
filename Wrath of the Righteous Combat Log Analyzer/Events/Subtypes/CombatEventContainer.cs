@@ -65,7 +65,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public CharacterList Characters_Override { get => _Characters_Override; }
 
-        private void Update_Characters_List()
+        protected void Update_Characters_List()
         {
             // *Don't* clear the _Characters list!
             //

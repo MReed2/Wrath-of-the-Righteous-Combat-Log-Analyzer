@@ -11,13 +11,14 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
     public abstract class CombatEvent
     {
-        public enum Char_Enum { Friendly, Hostile, Summon, Unknown }
+        public enum Char_Enum { Friendly, Hostile, Summon, Unknown, Really_Unknown }
 
         public event CombatEventChanged OnCombatEventChanged;
 
         private string _Source = "";
         private int _ID = -1;
-        private Char_Enum _Character_Type = Char_Enum.Unknown;
+        private Char_Enum _Character_Type = Char_Enum.Really_Unknown;
+        private Char_Enum _Smarter_Guess_Character_Type = Char_Enum.Really_Unknown;
         private string _Friendly_Name = "";
         private CombatEventList _Children = new CombatEventList();
         private int _Cached_Source_Hashcode = 0;
@@ -41,12 +42,10 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         {
             get
             {
-                if (_Character_Type == Char_Enum.Unknown)
+                if (_Character_Type == Char_Enum.Really_Unknown)
                 {
-                    if (Character_Name.Contains("Companion") || (Character_Name.Contains("Player_Unit")) || (Character_Name.Contains("AneviaTirabade"))) { return Char_Enum.Friendly; }
-                    else if (Character_Name.Contains("Summoner")) { return Char_Enum.Hostile; }
-                    else if (Character_Name.Contains("Summon")) { return Char_Enum.Summon; }
-                    else { return Char_Enum.Hostile; }
+                    if (_Smarter_Guess_Character_Type == Char_Enum.Really_Unknown) { return Guess_Character_Type_From_String(Character_Name); }
+                    else { return _Smarter_Guess_Character_Type; }
                 }
                 else { return _Character_Type; }
             }
@@ -57,6 +56,57 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     _Character_Type = value;
                     OnCombatEventChanged?.Invoke(this);
                 }
+            }
+        }
+
+        public Char_Enum Smarter_Guess_Character_Type
+        {
+            get => _Smarter_Guess_Character_Type;
+            set
+            {
+                if (value != _Smarter_Guess_Character_Type)
+                {
+                    _Smarter_Guess_Character_Type = value;
+                    OnCombatEventChanged?.Invoke(this);
+                }
+            }
+        }
+
+        private Char_Enum Guess_Character_Type_From_String(string inStr)
+        {
+            if (inStr.Contains("Companion") || (inStr.Contains("Player_Unit")) ) { return Char_Enum.Friendly; }
+            else if (inStr.Contains("Summoner")) { return Char_Enum.Hostile; }
+            else if (inStr.Contains("Summon")) { return Char_Enum.Summon; }
+            else { return Char_Enum.Hostile; }
+        }
+
+        private bool Obviously_Hostile(string inStr)
+        {
+            return (Regex.Match(inStr, @".*?CR(\d*?)_.*").Success); // Looking for "...CR###_..."  -- not all hostiles use this format, but most do.
+        }
+
+        public Char_Enum Character_Type_From_Target()
+        {
+            if (this is AttackEvent)
+            {
+                if (((AttackEvent)this).Guess_Target_Character_Type == Char_Enum.Really_Unknown)
+                {
+                    if (Obviously_Hostile(Source_Character_Name)) { return Char_Enum.Hostile; } // If the actor is hostile, return that.
+                    else if (Obviously_Hostile(((AttackEvent)this).Source_Target_Character_Name)) { return Char_Enum.Friendly; } // If the target is hostile, then the source is almost certainly friendly
+                    else if (Guess_Character_Type_From_String(((AttackEvent)this).Source_Target_Character_Name) == Char_Enum.Friendly) { return Char_Enum.Hostile; }
+                    else if (Guess_Character_Type_From_String(((AttackEvent)this).Source_Target_Character_Name) == Char_Enum.Hostile) { return Char_Enum.Friendly; }
+                    else { return Char_Enum.Really_Unknown; }
+                }
+                else
+                {
+                    if (((AttackEvent)this).Guess_Target_Character_Type == Char_Enum.Friendly) { return Char_Enum.Hostile; }
+                    else if (((AttackEvent)this).Guess_Target_Character_Type == Char_Enum.Hostile) { return Char_Enum.Friendly; }
+                    else { return Char_Enum.Really_Unknown; }
+                }
+            }
+            else
+            {
+                return Char_Enum.Really_Unknown;
             }
         }
 

@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 {
-    class Bonus
+    public class Bonus
     {
         private string _Bonus_Major_Type = "";
         private string _Bonus_Minor_Type = "";

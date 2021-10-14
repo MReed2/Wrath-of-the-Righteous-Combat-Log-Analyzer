@@ -25,6 +25,94 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public CharacterList Children { get => _Children; }
 
+        public int Update_Smarter_Guesses_Character_Types()
+        {
+            CombatEventList friendly_lst = new CombatEventList();
+            CombatEventList hostile_lst = new CombatEventList();
+            CombatEventList atk_lst = new CombatEventList();
+
+            int changed_cnt = 0;
+
+            foreach (CombatEvent curr_evnt in Parents)
+            {
+                if (curr_evnt is AttackEvent)
+                {
+                    CombatEvent.Char_Enum char_type_from_target = curr_evnt.Character_Type_From_Target();
+                    if (char_type_from_target == CombatEvent.Char_Enum.Friendly) { friendly_lst.Add(curr_evnt); }
+                    else if (char_type_from_target == CombatEvent.Char_Enum.Hostile) { hostile_lst.Add(curr_evnt); }
+
+                    atk_lst.Add(curr_evnt);
+                }
+            }
+
+            foreach (CharacterListItem inner_curr_char in Children)
+            {
+                foreach (CombatEvent curr_evnt in inner_curr_char.Parents)
+                {
+                    if (curr_evnt is AttackEvent)
+                    {
+                        CombatEvent.Char_Enum char_type_from_target = curr_evnt.Character_Type_From_Target();
+                        if (char_type_from_target == CombatEvent.Char_Enum.Friendly) { friendly_lst.Add(curr_evnt); }
+                        else if (char_type_from_target == CombatEvent.Char_Enum.Hostile) { hostile_lst.Add(curr_evnt); }
+
+                        atk_lst.Add(curr_evnt);
+                    }
+                }
+            }
+
+            if (atk_lst.Count > 0)
+            {
+                if (hostile_lst.Count > friendly_lst.Count)
+                {
+                    foreach (CombatEvent curr_evnt in Parents)
+                    {
+                        if (curr_evnt.Smarter_Guess_Character_Type != CombatEvent.Char_Enum.Hostile)
+                        {
+                            changed_cnt++;
+                            curr_evnt.Smarter_Guess_Character_Type = CombatEvent.Char_Enum.Hostile;
+                        }
+                    }
+
+                    foreach (CharacterListItem inner_curr_char in Children)
+                    {
+                        foreach (CombatEvent curr_evnt in inner_curr_char.Parents)
+                        {
+                            if (curr_evnt.Smarter_Guess_Character_Type != CombatEvent.Char_Enum.Hostile)
+                            {
+                                changed_cnt++;
+                                curr_evnt.Smarter_Guess_Character_Type = CombatEvent.Char_Enum.Hostile;
+                            }
+                        }
+                    }
+                }
+                else if (friendly_lst.Count > hostile_lst.Count)
+                {
+                    foreach (CombatEvent curr_evnt in Parents)
+                    {
+                        if (curr_evnt.Smarter_Guess_Character_Type != CombatEvent.Char_Enum.Friendly)
+                        {
+                            changed_cnt++;
+                            curr_evnt.Smarter_Guess_Character_Type = CombatEvent.Char_Enum.Friendly;
+                        }
+                    }
+
+                    foreach (CharacterListItem inner_curr_char in Children)
+                    {
+                        foreach (CombatEvent curr_evnt in inner_curr_char.Parents)
+                        {
+                            if (curr_evnt.Smarter_Guess_Character_Type != CombatEvent.Char_Enum.Friendly)
+                            {
+                                changed_cnt++;
+                                curr_evnt.Smarter_Guess_Character_Type = CombatEvent.Char_Enum.Friendly;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return changed_cnt;
+        }
+
         public CharacterListItem(CombatEvent inParent)
         {
             AddParent(inParent);
