@@ -451,13 +451,13 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 line = short_div_txt + tmp.Groups[1].Value + "</div>\n" + div_tag_txt + "\t\t" + tmp.Groups[2].Value + "</div>";
             }
             // 	<b>Armor Class: 20 (Flat-footed)</b>  Base value: 10  Deflection: <color=#004604>+1 [Ring of Protection +1]</color>
-            else if (line.Contains("Armor Class:") && (colon_count == 3) && (!line.Contains("Natural 1.")) && (!line.Contains("Natural 20.")))
+            else if ( line.Contains("Armor Class:") && (colon_count == 3) && (!line.Contains("Natural 1.")) && (!line.Contains("Natural 20.")) && (!line.Contains("Natural <s>1</s> 20")) )
             {
                 System.Text.RegularExpressions.Match tmp = System.Text.RegularExpressions.Regex.Match(line, @"\s(.*?)\s\s(.*?)\s\s(.*)");
                 line = div_tag_txt + tmp.Groups[1].Value + "</div>\n" + long_div_txt + "\t\t" + tmp.Groups[2].Value + "</div>\n" + long_div_txt + "\t\t" + tmp.Groups[3].Value + "</div>";
             }
             //	<b>Armor Class: 10 (Flat-footed, Touch)</b>  Base value: 10
-            else if (line.Contains("Armor Class:") && (colon_count == 2) && (!line.Contains("Natural 1.")) && (!line.Contains("Natural 20.")))
+            else if (line.Contains("Armor Class:") && (colon_count == 2) && (!line.Contains("Natural 1.")) && (!line.Contains("Natural 20.")) && (!line.Contains("Natural <s>1</s> 20")) )
             {
                 System.Text.RegularExpressions.Match tmp = System.Text.RegularExpressions.Regex.Match(line, @"\s(.*?)\s\s(.*)");
                 line = div_tag_txt + tmp.Groups[1].Value + "</div>\n" + long_div_txt + "\t\t" + tmp.Groups[2].Value + "</div>";
