@@ -61,8 +61,10 @@
     </ApplicationDefinition>
     <Compile Include="Characters\CharacterList.cs" />
     <Compile Include="Characters\CharacterListItem.cs" />
+    <Compile Include="Characters\TargetedCharacterListItem.cs" />
     <Compile Include="Events\CombatEventList.cs" />
     <Compile Include="CombatLog_Parser.cs" />
+    <Compile Include="Events\CombatEventTargeted.cs" />
     <Compile Include="Stats\CombatStats.cs" />
     <Compile Include="Events\Subtypes\CombatStartEvent.cs" />
     <Compile Include="Events\Subtypes\CombatEventContainer.cs" />

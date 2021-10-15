@@ -66,7 +66,12 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             {
                 _Subtype = "Death";
                 //<div style="margin-left:   0px"><b><b><span style="color:#262626">Zerieks[1507b0b0]</span></b></b> dies!</div>
+                //<div style="margin-left:   0px">IvorySanctum_MythicSchir[ef7d26d8]<b><b><span style="color:#262626"></span></b></b> dies!</div>
                 _Character_Name = Regex.Match(line, @"(?:.*\x22>){2}(.*?)<").Groups[1].Value;
+                if (_Character_Name == "")
+                {
+                    _Character_Name = Regex.Match(line, @"(?:.*?\x22>)(.*?)<(?:.*?\x22>)").Groups[1].Value;
+                }
                 _Source_Character_Name = _Character_Name;
             }
             else if (line.Contains("inspect failed"))

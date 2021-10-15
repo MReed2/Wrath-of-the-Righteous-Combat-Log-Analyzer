@@ -8,7 +8,7 @@ using System.Windows.Controls;
 
 namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 {
-    class HealingEvent : CombatEvent
+    class HealingEvent : CombatEventTargeted
     {
         private string _Source_Character_Name = "";
         private string _Character_Name = "";
@@ -26,14 +26,9 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             get { return _Character_Name; }
             set { _Character_Name = value; }
         }
-        
-        public string Source_Target_Character_Name { get => _Source_Target_Character_Name;  }
 
-        public string Target_Character_Name
-        {
-            get { return _Target_Character_Name; }
-            set { _Target_Character_Name = value; }
-        }
+        public override string Source_Target_Character_Name { get => _Source_Target_Character_Name; }
+        public override string Target_Character_Name { get => _Target_Character_Name; set => _Target_Character_Name = value; }
 
         public override List<Die_Roll> Die_Rolls
         {
@@ -71,6 +66,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     _Character_Name = tmp[1].Value;
                     _Source_Character_Name = tmp[1].Value;
                     _Target_Character_Name = _Character_Name;
+                    _Source_Target_Character_Name = _Character_Name;
                     _Net_Healing = int.Parse(tmp[2].Value);
                 }
             }

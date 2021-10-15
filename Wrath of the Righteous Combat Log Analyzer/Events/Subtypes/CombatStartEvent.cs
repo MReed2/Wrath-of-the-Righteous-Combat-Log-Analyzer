@@ -44,42 +44,24 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             do
             {
+                //System.Diagnostics.Debug.WriteLine("Loop Cnt = {0}", loop_cnt);
                 changed_cnt = 0;
                 loop_cnt++;
+                if (loop_cnt > 5) { throw new System.Exception("Stuck in a loop"); }
                 foreach (CharacterListItem curr_char in Characters)
                 {
-                    changed_cnt += curr_char.Update_Smarter_Guesses_Character_Types();
+                    //System.Diagnostics.Debug.WriteLine("Checking {0}", curr_char.Source_Character_Name);
+                    changed_cnt += curr_char.Update_Smarter_Guesses_Character_Types(curr_char);
                 }
-
-                if (changed_cnt > 0)
-                {
-                    foreach (CharacterListItem curr_char in Characters)
-                    {
-                        if (curr_char.Character_Type != Char_Enum.Really_Unknown)
-                        {
-                            foreach (CombatEvent curr_evnt in Children)
-                            {
-                                if (curr_evnt is AttackEvent)
-                                {
-                                    AttackEvent curr_atk_evnt = (AttackEvent)curr_evnt;
-                                    if ((curr_atk_evnt.Source_Target_Character_Name == curr_char.Source_Character_Name)&&(curr_atk_evnt.Guess_Target_Character_Type != curr_char.Character_Type))
-                                    {
-                                        curr_atk_evnt.Guess_Target_Character_Type = curr_char.Character_Type;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } while ((changed_cnt > 0)&&(loop_cnt<2));
+            } while (changed_cnt > 0);
         }
         
         public bool Update_Reload(CombatStartEvent in_prev_CombatStartEvent)
         {
-            System.Diagnostics.Debug.WriteLine("Strict / Full:\n{0} ==\n{1}", in_prev_CombatStartEvent.Get_Full_Strict_Combat_String(), Get_Full_Strict_Combat_String());
-            System.Diagnostics.Debug.WriteLine("Loose / Full:\n{0} ==\n{1}", in_prev_CombatStartEvent.Get_Full_Loose_Combat_String(), Get_Full_Loose_Combat_String());
-            System.Diagnostics.Debug.WriteLine("Strict / Starting:\n{0} ==\n{1}", in_prev_CombatStartEvent.Get_Starting_Strict_Combat_String(), Get_Starting_Loose_Combat_String());
-            System.Diagnostics.Debug.WriteLine("Loose / Starting:\n{0} ==\n{1}", in_prev_CombatStartEvent.Get_Starting_Loose_Combat_String(), Get_Starting_Loose_Combat_String());
+            //System.Diagnostics.Debug.WriteLine("Strict / Full:\n{0} ==\n{1}", in_prev_CombatStartEvent.Get_Full_Strict_Combat_String(), Get_Full_Strict_Combat_String());
+            //System.Diagnostics.Debug.WriteLine("Loose / Full:\n{0} ==\n{1}", in_prev_CombatStartEvent.Get_Full_Loose_Combat_String(), Get_Full_Loose_Combat_String());
+            //System.Diagnostics.Debug.WriteLine("Strict / Starting:\n{0} ==\n{1}", in_prev_CombatStartEvent.Get_Starting_Strict_Combat_String(), Get_Starting_Loose_Combat_String());
+            //System.Diagnostics.Debug.WriteLine("Loose / Starting:\n{0} ==\n{1}", in_prev_CombatStartEvent.Get_Starting_Loose_Combat_String(), Get_Starting_Loose_Combat_String());
 
             if (in_prev_CombatStartEvent.Get_Full_Strict_Combat_String() == Get_Full_Strict_Combat_String()) { _Strict_Full_Reload_Cnt += 1 + in_prev_CombatStartEvent.Strict_Full_Reload_Cnt; }
             if (in_prev_CombatStartEvent.Get_Full_Loose_Combat_String() == Get_Full_Loose_Combat_String()) { _Loose_Full_Reload_Cnt += 1 + in_prev_CombatStartEvent.Loose_Full_Reload_Cnt; }
@@ -165,7 +147,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 end_of_inital_inits_ID = curr_evnt.ID;
             }
 
-            if (start_of_inital_inits_ID == int.MaxValue) { throw new System.Exception("Unable to find *ANY* InitiativeEvents in StartCombatEvent"); }
+            if (start_of_inital_inits_ID == int.MaxValue) { return rtn; }
 
             foreach (CharacterListItem curr_char in Characters)
             {

@@ -8,7 +8,7 @@ using System.Windows.Controls;
 
 namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 {
-    class DamageEvent : CombatEvent
+    class DamageEvent : CombatEventTargeted
     {
         private string _Source_Character_Name = "";
         private string _Character_Name = "";
@@ -40,12 +40,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
         }
         
-        public string Source_Target_Character_Name { get => _Source_Target_Character_Name; }
-
-        public string Target_Character_Name
-        {
-            get { return _Target_Character_Name; }
-        }
+        public override string Source_Target_Character_Name { get => _Source_Target_Character_Name; }
+        public override string Target_Character_Name { get => _Target_Character_Name; set => _Target_Character_Name = value; }
 
         public int Damage
         {
@@ -77,15 +73,20 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             if (line.Contains("deals")&&line.Contains("damage")&&(!_init_done))
             {
                 //<div style="margin-left:   0px"><b><b><span style="color:#224863">Wenduag_Companion[c2c0dfd3]</span></b></b> deals <b>15</b> damage (reduced) to <b><b><span style="color:#262626">Zerieks[1507b0b0]</span></b></b>.</div>
+                //<div style="margin-left:   0px">IvorySanctum_MythicSchir[dcbf72f7]<b><b><span style="color:#262626"></span></b></b> deals <b>10</b> damage (reduced) to <b><b><span style="color:#AF501F">Ember_Companion[a7e209db]</span></b></b>.</div>
                 Source += line + "\n";
                 _init_done = true;
 
-                GroupCollection damage_header = Regex.Match(line, @"(?:.*?\x22>){2}(.*?)<.*?<b>(\d*).*?\x22>(.*?)<").Groups;
-                _Character_Name = damage_header[1].Value;
-                _Source_Character_Name = damage_header[1].Value;
-                _Damage = int.Parse(damage_header[2].Value);
-                _Target_Character_Name = damage_header[3].Value;
-                _Source_Target_Character_Name = damage_header[3].Value;
+                Match damage_header = Regex.Match(line, @"(?:.*?\x22>){2}(.*?)<.*?<b>(\d*).*?\x22>(.*?)<");
+                if (damage_header.Groups[1].Value == "")
+                {
+                    damage_header = Regex.Match(line, @"(?:.*?\x22>)(.*?)<(?:.*?\x22>).*?<b>(\d*).*?\x22>(.*?)<");
+                }
+                _Character_Name = damage_header.Groups[1].Value;
+                _Source_Character_Name = damage_header.Groups[1].Value;
+                _Damage = int.Parse(damage_header.Groups[2].Value);
+                _Target_Character_Name = damage_header.Groups[3].Value;
+                _Source_Target_Character_Name = damage_header.Groups[3].Value;
             }
             else if (line.Contains(" receives ") && line.Contains("damage."))
             {

@@ -78,7 +78,12 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 {
                     if (curr_event is CombatStartEvent) { }
                     else if ((curr_event is SimpleEvent) && (((SimpleEvent)curr_event).Subtype != "Death")) { }
-                    else { _Characters.Add(new CharacterListItem(curr_event)); } // CharacterListItem and CharacterList manage duplicate entries -- no need to do so here
+                    else
+                    {
+                        _Characters.Add(new CharacterListItem(curr_event));
+                        // This line *DOES* do something new -- it adds the /target/ of the event to the characters list, if it isn't a duplicate.
+                        if (curr_event is CombatEventTargeted) { _Characters.Add(new TargetedCharacterListItem((CombatEventTargeted)curr_event)); }
+                    } // CharacterListItem and CharacterList manage duplicate entries -- no need to do so here
                 }//);
 
                 _Children_Count_When_Characters_Last_Refreshed = Children.Count;
@@ -417,8 +422,9 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 {
                     CharacterListItem curr_lst = (CharacterListItem)curr_tv_itm.Tag;
 
-                    curr_lst.Parents.Sort(Comparer<CombatEvent>.Create((first, second) => first.ID.CompareTo(second.ID) ));
-                    foreach (CombatEvent curr_event in curr_lst.Parents)
+                    CombatEventList tmp_ce_lst = curr_lst.Get_Combined_Parents();
+                    tmp_ce_lst.Sort(Comparer<CombatEvent>.Create((first, second) => first.ID.CompareTo(second.ID) ));
+                    foreach (CombatEvent curr_event in tmp_ce_lst)
                     {
                         html_to_display.Append(curr_event.Source_With_ID.Replace("–", "-").Replace("—", "--").Replace("×", "x"));
                     }
@@ -426,8 +432,9 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
             else
             {
-                itm_clicked.Parents.Sort(Comparer<CombatEvent>.Create((first, second) => first.ID.CompareTo(second.ID)));
-                foreach (CombatEvent curr_event in itm_clicked.Parents)
+                CombatEventList tmp_ce_lst = itm_clicked.Get_Combined_Parents();
+                tmp_ce_lst.Sort(Comparer<CombatEvent>.Create((first, second) => first.ID.CompareTo(second.ID)));
+                foreach (CombatEvent curr_event in tmp_ce_lst)
                 {
                     html_to_display.Append(curr_event.Source_With_ID.Replace("–", "-").Replace("—", "--").Replace("×", "x"));
                 }

@@ -12,41 +12,56 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public int IndirectFullCount { get { return GetAll().Count;  } }
 
-        public bool Contains(string inStr)
+        public CharacterListItem GetListItemBySourceName(string inStr)
         {
-            foreach (CharacterListItem curr_itm in GetAll() ) { if (curr_itm.Source_Character_Name == inStr) { return true; } }
+            foreach (CharacterListItem curr_itm in GetAll() )
+            {
+                if (curr_itm is TargetedCharacterListItem) { if (((TargetedCharacterListItem)curr_itm).Source_Target_Character_Name == inStr) { return curr_itm; } }
+                else { if (curr_itm.Source_Character_Name == inStr) { return curr_itm; } }
+            }
 
-            return false;
+            return null;
+        }
+
+        public CharacterListItem GetListItemByFriendlyName(string inStr)
+        {
+            foreach (CharacterListItem curr_itm in this)
+            {
+                if (curr_itm is TargetedCharacterListItem) { if (((TargetedCharacterListItem)curr_itm).Friendly_Target_Name == inStr) { return curr_itm; } }
+                else { if (curr_itm.Friendly_Name == inStr) { return curr_itm; } }
+            }
+
+            return null;
         }
 
         public new void Add(CharacterListItem inItm)
         {
-            // Check for duplicates -- if this character has already been added, add the event(s) attached to it as new parents if they are not duplicates
-            foreach (CharacterListItem curr_itm in GetAll()) { if (curr_itm.Source_Character_Name == inItm.Source_Character_Name) { curr_itm.AddParents(inItm.Parents);  return; } }
-
-            // We will be adding this itm somewhere, so register to receive change notifications
             inItm.OnCombatEventChanged += new CombatEventChanged(CombatEventChanged);
 
+            // Check for duplicates -- if this character has already been added, add the event(s) attached to it as new parents if they are not duplicates
+            CharacterListItem existing_itm = GetListItemBySourceName(inItm.Source_Character_Name);
+            if (existing_itm != null) { existing_itm.AddParents(inItm.Parents);  return; }
+
             // Check to see if the *friendly* name already as a direct child only -- if so, add this as a child to that node
-            foreach (CharacterListItem curr_itm in this) { if (curr_itm.Friendly_Name == inItm.Friendly_Name) { curr_itm.Children.Add(inItm, this); return; }  }
+            CharacterListItem existing_parent = GetListItemByFriendlyName(inItm.Friendly_Name);
+            if (existing_parent != null) { existing_parent.Children.Add(inItm, this); return; }
 
             // If neither the friendly name nor the source_character_name already exists, add this as directly.
+            base.Add(inItm);
+        }
+
+        protected void Add(CharacterListItem inItm, CharacterList inParent)
+        {
+            CharacterListItem existing_itm = GetListItemBySourceName(inItm.Source_Character_Name);
+
+            if (existing_itm != null) { return; }
+            // Don't recurse -- there should only be one layer of children.
             base.Add(inItm);
         }
 
         public void CombatEventChanged(CombatEvent source)
         {
             OnCombatEventChanged?.Invoke(source);
-        }
-
-        protected void Add(CharacterListItem inItm, CharacterList inParent)
-        {
-            foreach (CharacterListItem curr_itm in this) // Check for dups, and don't add them anywhere if found.
-            {
-                if (curr_itm.Source_Character_Name == inItm.Source_Character_Name) { return; }
-            }
-            // Don't recurse -- there should only be one layer of children.
-            base.Add(inItm);
         }
 
         public List<CharacterListItem> GetAll() // Return type avoids recursion -- when building *this* list, dups are OK

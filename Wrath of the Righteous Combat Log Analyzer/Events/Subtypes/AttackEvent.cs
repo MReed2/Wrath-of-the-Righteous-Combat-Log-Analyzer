@@ -8,13 +8,12 @@ using System.Windows.Controls;
 
 namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 {
-    public class AttackEvent : CombatEvent
+    public class AttackEvent : CombatEventTargeted
     {
         private string _Source_Character_Name = "";
         private string _Character_Name = "";
         private string _Source_Target_Character_Name = "";
         private string _Target_Character_Name = "";
-        private Char_Enum _Guess_Target_Character_Type = Char_Enum.Really_Unknown;
         private string _Weapon = "";
 
         private int _Attack_Num = 1;
@@ -59,14 +58,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             set { _Character_Name = value; }
         }
         
-        public string Source_Target_Character_Name { get => _Source_Target_Character_Name; }
-
-        public Char_Enum Guess_Target_Character_Type { get => _Guess_Target_Character_Type; set => _Guess_Target_Character_Type = value; }
-
-        public string Target_Character_Name
-        {
-            get { return _Target_Character_Name; }
-        }
+        public override string Source_Target_Character_Name { get => _Source_Target_Character_Name; }
+        public override string Target_Character_Name { get => _Target_Character_Name; set => _Target_Character_Name = value; }
 
         public string Weapon
         {
@@ -300,18 +293,31 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 }
                 //<div style="margin-left: 0px"><b><b><span style="color:#224863">Wenduag_Companion[c2c0dfd3]</span></b></b> attacks <b><b><span style="color:#262626">Zerieks[1507b0b0]</span></b></b> with <b>Shock Flaming Corrosive Cold Iron Kukri +3</b>. Hit</div>
                 //<div style="margin-left:   0px"><b><b><span style="color:#262626">CR17_Mercenary_Human_Melee_Male[99e83994]</span></b></b> attacks <b><b><span style="color:#224863">Wenduag_Companion[c2c0dfd3]</span></b></b> with <b>Punching Dagger</b>. Hit Sneak attack!</div>
+                //<div style="margin-left:   0px">IvorySanctum_MythicSchir[dcbf72f7]<b><b><span style="color:#262626"></span></b></b> attacks <b><b><span style="color:#AF501F">Ember_Companion[a7e209db]</span></b></b> with <b>Masterwork Bardiche</b>. Hit</div>
                 Source += line + "\n";
 
-                GroupCollection attack_hdr = Regex.Match(line, @"(?:\x22>.*?){2}(.*?)<.*?\x22>(.*?)<.*h .*?>(.*?)<.*? (.*?)<").Groups;
-                _Character_Name = attack_hdr[1].Value;
-                _Source_Character_Name = attack_hdr[1].Value;
-                _Target_Character_Name = attack_hdr[2].Value;
-                _Source_Target_Character_Name = attack_hdr[2].Value;
-                _Weapon = attack_hdr[3].Value;
-                _Attack_Success = (attack_hdr[4].Value.ToLower().Contains("hit"));
-                _Sneak_Attack = (attack_hdr[4].Value.ToLower().Contains("sneak attack"));
-                _Attack_Critical = (attack_hdr[4].Value.ToLower().Contains("critical"));
-                _init_done = true;
+                Match attack_hdr = Regex.Match(line, @"(?:\x22>.*?){2}(.*?)<.*?\x22>(.*?)<.*h .*?>(.*?)<.*? (.*?)<");
+                if (attack_hdr.Success)
+                {
+                    if (attack_hdr.Groups[1].Value == "")
+                    {
+                        attack_hdr = Regex.Match(line, @"(?:\x22>.*?)(.*?)<.*?\x22>.*\x22>(.*?)<.*h .*?>(.*?)<.*? (.*?)<");
+                    }
+                    _Character_Name = attack_hdr.Groups[1].Value;
+                    if (_Character_Name == "")
+                    {
+                        int zxkl = 1;
+                    }
+                    _Source_Character_Name = attack_hdr.Groups[1].Value;
+                    _Target_Character_Name = attack_hdr.Groups[2].Value;
+                    _Source_Target_Character_Name = attack_hdr.Groups[2].Value;
+                    _Weapon = attack_hdr.Groups[3].Value;
+                    _Attack_Success = (attack_hdr.Groups[4].Value.ToLower().Contains("hit"));
+                    _Sneak_Attack = (attack_hdr.Groups[4].Value.ToLower().Contains("sneak attack"));
+                    _Attack_Critical = (attack_hdr.Groups[4].Value.ToLower().Contains("critical"));
+                    _init_done = true;
+
+                }
             }
             else if ( (line.Contains("Result:")) && (!line.Contains("Critical confirmation result")) )
             {

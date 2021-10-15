@@ -44,15 +44,33 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             {
                 //<div style="margin-left: 0px"><b><b><span style="color:#262626">CR14_Cyborg_CrusaderTankLevel12[1cc7942c]</span></b></b>: Initiative check <b>31</b>.</div>
                 //<div style="margin-left:   0px"><b><b><span style="color:#262626">Lair_SuccubusBossHelperMeleeLevel7WithRapier[2aad38c6]</span></b></b>: Initiative check <b>-2</b>.</div>
+                //<div style="margin-left:   0px">IvorySanctum_MythicSchir[dcbf72f7]<b><b><span style="color:#262626"></span></b></b>: Initiative check <b>19</b>.</div>
                 Source += line + "\n";
                 _init_done = true;
 
                 Match parsed_line = Regex.Match(line, @"(?:.*?\x22>){2}(.*?)<(?:.*?k <b>)([+-]?\d*)<");
                 if (parsed_line.Success)
                 {
-                    _Character_Name = parsed_line.Groups[1].Value;
-                    _Source_Character_Name = parsed_line.Groups[1].Value;
-                    _Initiative = int.Parse(parsed_line.Groups[2].Value);
+                    if (parsed_line.Groups[1].Value != "")
+                    {
+                        _Character_Name = parsed_line.Groups[1].Value;
+                        _Source_Character_Name = parsed_line.Groups[1].Value;
+                        _Initiative = int.Parse(parsed_line.Groups[2].Value);
+                    }
+                    else
+                    {
+                        parsed_line = Regex.Match(line, @"(?:.*?\x22>)(.*?)<(?:.*?k <b>)([+-]?\d*)<");
+                        if (parsed_line.Success)
+                        {
+                            _Character_Name = parsed_line.Groups[1].Value;
+                            _Source_Character_Name = parsed_line.Groups[1].Value;
+                            _Initiative = int.Parse(parsed_line.Groups[2].Value);
+                        }
+                        else
+                        {
+                            throw new System.Exception("Unable to parse initiative 1st line \"" + line + "\".");
+                        }
+                    }
                 }
                 else
                 {
