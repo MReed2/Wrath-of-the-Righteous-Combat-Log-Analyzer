@@ -64,8 +64,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
         }
 
-        public CharacterList Characters_Override { get => _Characters_Override; }
-
         public void Update_Smarter_Guesses_Character_Types()
         {
             int changed_cnt = 0;
@@ -85,6 +83,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 // System.Diagnostics.Debug.WriteLine("changed_cnt = {0}", changed_cnt);
             } while ((changed_cnt > 0));
         }
+
+        public CharacterList Characters_Override { get => _Characters_Override; }
 
         protected void Update_Characters_List()
         {
@@ -327,6 +327,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private void CreateTextEditBoxes(CharacterList inList, Grid inGrid, int inCol)
         {
             int row = 1;
+            CharacterListItem prev_itm = null;
             foreach (CharacterListItem curr_itm in inList)
             {
                 Grid inner_grid = new Grid();
@@ -348,8 +349,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 };
                 Grid.SetRow(tb, 0);
                 Grid.SetColumn(tb, 0);
-                inner_grid.Children.Add(tb);
-                
+                inner_grid.Children.Add(tb);                
 
                 TextBlock textBlock = new TextBlock()
                 {
@@ -365,6 +365,9 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 Grid.SetRow(textBlock, 0);
                 Grid.SetColumn(textBlock, 1);
                 inner_grid.Children.Add(textBlock);
+
+                if (prev_itm != null) { if (curr_itm.Friendly_Name == prev_itm.Friendly_Name) { throw new System.Exception("Added two entries with the same text back-to-back"); } }
+                prev_itm = curr_itm;
             }
         }
 

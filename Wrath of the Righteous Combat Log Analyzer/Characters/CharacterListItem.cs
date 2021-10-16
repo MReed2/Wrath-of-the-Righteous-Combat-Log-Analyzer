@@ -105,25 +105,25 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     }
                 }
             }
-
+            
             if (other_lst.Count > (friendly_lst.Count + hostile_lst.Count))
             {
-                // System.Diagnostics.Debug.WriteLine("\t{0} isn't classified due to too many 'Other' events ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
+                System.Diagnostics.Debug.WriteLine("\t{0} isn't classified due to too many 'Other' events ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
                 return 0;
             } // This shouldn't happen often, if ever, but if it does then the vote is inconclusive.
             else if (friendly_lst.Count > hostile_lst.Count)
             {
-                // System.Diagnostics.Debug.WriteLine("\t{0} appears to be Friendly ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
+                System.Diagnostics.Debug.WriteLine("\t{0} appears to be Friendly ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
                 changed_cnt = SetCharacterType(inChar, CombatEvent.Char_Enum.Friendly);
             }
             else if (hostile_lst.Count > friendly_lst.Count)
             {
-                // System.Diagnostics.Debug.WriteLine("\t{0} appears to be Hostile ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
+                System.Diagnostics.Debug.WriteLine("\t{0} appears to be Hostile ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
                 changed_cnt = SetCharacterType(inChar, CombatEvent.Char_Enum.Hostile);
             }
             else
             {
-                // System.Diagnostics.Debug.WriteLine("\t{0} isn't classified due to a tie ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
+                System.Diagnostics.Debug.WriteLine("\t{0} isn't classified due to a tie ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
             }
 
             //System.Diagnostics.Debug.WriteLine("Updated {0} combat events", changed_cnt);
@@ -197,7 +197,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         public CharacterListItem(CombatEvent inParent)
         {
             AddParent(inParent);
-            _Parent.OnCombatEventChanged += new CombatEventChanged(CombatEventChanged);
         }
 
         public void AddParent(CombatEvent inParent)
@@ -223,7 +222,11 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public int CompareTo(object other) // Used to sort the list
         {
-            if (other is CharacterListItem) { return string.Compare(this.Friendly_Name, ((CharacterListItem)other).Friendly_Name); }
+            if (other is CharacterListItem)
+            {
+                CharacterListItem tmp_other = (CharacterListItem)other;
+                return string.Compare(this.Friendly_Name, tmp_other.Friendly_Name);
+            }
             else { throw new System.Exception("Attempted to compare CharacterListItem with '" + other.GetType().ToString() + "', which is not supported."); }
         }
     }

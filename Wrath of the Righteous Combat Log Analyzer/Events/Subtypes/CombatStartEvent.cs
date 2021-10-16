@@ -44,10 +44,10 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             //System.Diagnostics.Debug.WriteLine("Strict / Starting:\n{0} ==\n{1}", in_prev_CombatStartEvent.Get_Starting_Strict_Combat_String(), Get_Starting_Loose_Combat_String());
             //System.Diagnostics.Debug.WriteLine("Loose / Starting:\n{0} ==\n{1}", in_prev_CombatStartEvent.Get_Starting_Loose_Combat_String(), Get_Starting_Loose_Combat_String());
 
-            if (in_prev_CombatStartEvent.Get_Full_Strict_Combat_String() == Get_Full_Strict_Combat_String()) { _Strict_Full_Reload_Cnt += 1 + in_prev_CombatStartEvent.Strict_Full_Reload_Cnt; }
-            if (in_prev_CombatStartEvent.Get_Full_Loose_Combat_String() == Get_Full_Loose_Combat_String()) { _Loose_Full_Reload_Cnt += 1 + in_prev_CombatStartEvent.Loose_Full_Reload_Cnt; }
-            if (in_prev_CombatStartEvent.Get_Starting_Strict_Combat_String() == Get_Starting_Loose_Combat_String()) { _Strict_Full_Reload_Cnt += 1 + in_prev_CombatStartEvent.Strict_Starting_Reload_Cnt; }
-            if (in_prev_CombatStartEvent.Get_Starting_Loose_Combat_String() == Get_Starting_Loose_Combat_String()) { _Loose_Starting_Reload_Cnt += 1 + in_prev_CombatStartEvent.Loose_Starting_Reload_Cnt; }
+            if (in_prev_CombatStartEvent.Get_Full_Strict_Combat_String() == Get_Full_Strict_Combat_String()) { _Strict_Full_Reload_Cnt = 1 + in_prev_CombatStartEvent.Strict_Full_Reload_Cnt; }
+            if (in_prev_CombatStartEvent.Get_Full_Loose_Combat_String() == Get_Full_Loose_Combat_String()) { _Loose_Full_Reload_Cnt = 1 + in_prev_CombatStartEvent.Loose_Full_Reload_Cnt; }
+            if (in_prev_CombatStartEvent.Get_Starting_Strict_Combat_String() == Get_Starting_Strict_Combat_String()) { _Strict_Starting_Reload_Cnt = 1 + in_prev_CombatStartEvent.Strict_Starting_Reload_Cnt; }
+            if (in_prev_CombatStartEvent.Get_Starting_Loose_Combat_String() == Get_Starting_Loose_Combat_String()) { _Loose_Starting_Reload_Cnt = 1 + in_prev_CombatStartEvent.Loose_Starting_Reload_Cnt; }
 
             return ((_Strict_Full_Reload_Cnt > 0) || (_Loose_Full_Reload_Cnt > 0) || (_Strict_Starting_Reload_Cnt > 0) || (_Loose_Starting_Reload_Cnt > 0));
         }
