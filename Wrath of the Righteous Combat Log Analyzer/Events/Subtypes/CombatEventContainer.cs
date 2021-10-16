@@ -96,6 +96,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             if ((_Children_Count_When_Characters_Last_Refreshed != Children.Count)||(_Children_Changed))
             {
+                System.Diagnostics.Debug.WriteLine("Entering Update_Characters_List() {0}", System.DateTime.Now);
+
                 //Parallel.ForEach(Children, (curr_event) =>  Can't do this in parallel, because the contents of the collection change in the loop.
                 foreach (CombatEvent curr_event in Children)
                 {
@@ -116,6 +118,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 _Has_Rendered_Character_UC_After_Refresh = false; // Need to rebuild the control.
                 _Has_Rendered_Stats_UC_After_Refresh = false; // Stats also need to be rebuilt.
                 _Updating_Characters_List = false; // Reenable change notifications.
+
+                System.Diagnostics.Debug.WriteLine("Exiting Update_Characters_List() {0}", System.DateTime.Now);
             }
         }
 
@@ -145,6 +149,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             UserControl tmp_UC = Get_UserControl_For_Characters();
 
             if (_Has_Rendered_Character_UC_After_Refresh) { return tmp_UC; }
+
+            System.Diagnostics.Debug.WriteLine("Entering Update_Characters_UserControl() {0}", System.DateTime.Now);
 
             _Has_Rendered_Character_UC_After_Refresh = true;
 
@@ -234,6 +240,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 Grid.SetRowSpan(refresh_button, grid.RowDefinitions.Count);
                 grid.Children.Add(refresh_button);
             }
+
+            System.Diagnostics.Debug.WriteLine("Exiting Update_Characters_UserControl() {0}", System.DateTime.Now);
 
             return tmp_UC;
         }

@@ -37,6 +37,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private int _File_Event_Cnt = 0;
 
         private int _Combat_Event_Cnt = 0;
+
+        private bool _First_Idle_After_Load = false;
                 
         public MainWindow()
         {
@@ -53,6 +55,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             {
                 string[] default_files = { default_file };
 
+                _First_Idle_After_Load = true;
                 CombatLog_Parser.Spawn_Parse(default_files);
             }
         }
@@ -106,28 +109,11 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     _Root_TreeViewItem.IsSelected = true;
                 }
             }
-
-            CombatStartEvent prev_combat = null;
-
-            if (_Root_TreeViewItem.Items.Count > 1)
+            
+            if (_First_Idle_After_Load)
             {
-                LoadingAwareTreeViewItem prev_file_tvi = (LoadingAwareTreeViewItem)_Root_TreeViewItem.Items[_Root_TreeViewItem.Items.Count - 2];
-                LoadingAwareTreeViewItem last_combat_tvi = (LoadingAwareTreeViewItem)prev_file_tvi.Items[prev_file_tvi.Items.Count - 1];
-                prev_combat = (CombatStartEvent)last_combat_tvi.Tag;
-            }
-
-            foreach (LoadingAwareTreeViewItem curr_combat in _Last_File_Start_TreeView_Item.Items)
-            {
-                if (prev_combat != null) { ((CombatStartEvent)curr_combat.Tag).Update_Reload(prev_combat); }
-                prev_combat = ((CombatStartEvent)curr_combat.Tag);
-                curr_combat.Header = Regex.Replace((string)curr_combat.Header, @"(\(\d*)(.*\))", "$1") + String.Format
-                    (
-                        " Events, {0} / {1} / {2} / {3})",
-                        ((CombatStartEvent)curr_combat.Tag).Strict_Full_Reload_Cnt,
-                        ((CombatStartEvent)curr_combat.Tag).Loose_Full_Reload_Cnt,
-                        ((CombatStartEvent)curr_combat.Tag).Strict_Starting_Reload_Cnt,
-                        ((CombatStartEvent)curr_combat.Tag).Loose_Starting_Reload_Cnt
-                    );
+                _First_Idle_After_Load = false;
+                Update_Reload();
             }
         }
 
@@ -180,6 +166,28 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             };
 
             bw.RunWorkerAsync();
+        }
+
+        public void Update_Reload()
+        {
+            CombatStartEvent prev_combat = null;
+
+            foreach (LoadingAwareTreeViewItem curr_file_tvi in _Root_TreeViewItem.Items)
+            {
+                foreach (LoadingAwareTreeViewItem curr_combat in curr_file_tvi.Items)
+                {
+                    if (prev_combat != null) { ((CombatStartEvent)curr_combat.Tag).Update_Reload(prev_combat); }
+                    prev_combat = ((CombatStartEvent)curr_combat.Tag);
+                    curr_combat.Header = Regex.Replace((string)curr_combat.Header, @"(\(\d*)(.*\))", "$1") + String.Format
+                        (
+                            " Events, {0} / {1} / {2} / {3})",
+                            ((CombatStartEvent)curr_combat.Tag).Strict_Full_Reload_Cnt,
+                            ((CombatStartEvent)curr_combat.Tag).Loose_Full_Reload_Cnt,
+                            ((CombatStartEvent)curr_combat.Tag).Strict_Starting_Reload_Cnt,
+                            ((CombatStartEvent)curr_combat.Tag).Loose_Starting_Reload_Cnt
+                        );
+                }
+            }
         }
 
         private void InitRootNode()
@@ -408,6 +416,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 MasterTreeView.Items.Clear();
                 _Root_TreeViewItem = null; // Everything else will be reset once the first event is processed.
 
+                _First_Idle_After_Load = true;
                 CombatLog_Parser.Spawn_Parse(filePicker.FileNames);
             }
         }
@@ -423,6 +432,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     CombatEventContainer tmp = (CombatEventContainer)_Root_TreeViewItem.Tag;
                     tmp.Get_UserControl_For_Display().IsEnabled = false;
                 }
+
+                _First_Idle_After_Load = true;
                 CombatLog_Parser.Change_Input_Files(filePicker.FileNames);
             }
         }
