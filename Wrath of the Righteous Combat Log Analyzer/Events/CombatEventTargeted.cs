@@ -8,8 +8,19 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 {
     public abstract class CombatEventTargeted: CombatEvent
     {
-        public abstract string Target_Character_Name { get; set; }
         public abstract string Source_Target_Character_Name { get; }
+        public abstract string Target_Character_Name { get; set; }
+
+        private string _Target_Friendly_Name = "";
+        public string Target_Friendly_Name
+        {
+            get
+            {
+                if (_Target_Friendly_Name == "") { return CleanupName(Target_Character_Name); }
+                else { return _Target_Friendly_Name; }
+            }
+            set => _Target_Friendly_Name = value;
+        }
 
         private Char_Enum _Guess_Target_Character_Type = Char_Enum.Really_Unknown;
         private Char_Enum _Target_Character_Type = Char_Enum.Really_Unknown;
@@ -28,7 +39,15 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         }
         public Char_Enum Target_Character_Type
         {
-            get => _Target_Character_Type;
+            get
+            {
+                if (_Target_Character_Type == Char_Enum.Really_Unknown)
+                {
+                    if (_Guess_Target_Character_Type != Char_Enum.Really_Unknown) { return _Guess_Target_Character_Type; }
+                    else { return Guess_Character_Type_From_String(Target_Character_Name); }
+                }
+                else { return _Target_Character_Type; }
+            }
             set
             {
                 if (_Target_Character_Type != value)

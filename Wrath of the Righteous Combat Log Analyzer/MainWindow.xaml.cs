@@ -106,6 +106,29 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     _Root_TreeViewItem.IsSelected = true;
                 }
             }
+
+            CombatStartEvent prev_combat = null;
+
+            if (_Root_TreeViewItem.Items.Count > 1)
+            {
+                LoadingAwareTreeViewItem prev_file_tvi = (LoadingAwareTreeViewItem)_Root_TreeViewItem.Items[_Root_TreeViewItem.Items.Count - 2];
+                LoadingAwareTreeViewItem last_combat_tvi = (LoadingAwareTreeViewItem)prev_file_tvi.Items[prev_file_tvi.Items.Count - 1];
+                prev_combat = (CombatStartEvent)last_combat_tvi.Tag;
+            }
+
+            foreach (LoadingAwareTreeViewItem curr_combat in _Last_File_Start_TreeView_Item.Items)
+            {
+                if (prev_combat != null) { ((CombatStartEvent)curr_combat.Tag).Update_Reload(prev_combat); }
+                prev_combat = ((CombatStartEvent)curr_combat.Tag);
+                curr_combat.Header = Regex.Replace((string)curr_combat.Header, @"(\(\d*)(.*\))", "$1") + String.Format
+                    (
+                        " Events, {0} / {1} / {2} / {3})",
+                        ((CombatStartEvent)curr_combat.Tag).Strict_Full_Reload_Cnt,
+                        ((CombatStartEvent)curr_combat.Tag).Loose_Full_Reload_Cnt,
+                        ((CombatStartEvent)curr_combat.Tag).Strict_Starting_Reload_Cnt,
+                        ((CombatStartEvent)curr_combat.Tag).Loose_Starting_Reload_Cnt
+                    );
+            }
         }
 
         public void NeedToCalculateStats(CombatEventContainer sender, CombatStats inStatsToRecalc, CombatEventList inCombatEventList)

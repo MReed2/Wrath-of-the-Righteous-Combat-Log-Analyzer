@@ -37,25 +37,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         public int Strict_Starting_Reload_Cnt { get => _Strict_Starting_Reload_Cnt; }
         public int Loose_Starting_Reload_Cnt { get => _Loose_Starting_Reload_Cnt;  }
 
-        public void Update_Smarter_Guesses_Character_Types()
-        {
-            int changed_cnt = 0;
-            int loop_cnt = 0;
-
-            do
-            {
-                //System.Diagnostics.Debug.WriteLine("Loop Cnt = {0}", loop_cnt);
-                changed_cnt = 0;
-                loop_cnt++;
-                if (loop_cnt > 5) { throw new System.Exception("Stuck in a loop"); }
-                foreach (CharacterListItem curr_char in Characters)
-                {
-                    //System.Diagnostics.Debug.WriteLine("Checking {0}", curr_char.Source_Character_Name);
-                    changed_cnt += curr_char.Update_Smarter_Guesses_Character_Types(curr_char);
-                }
-            } while (changed_cnt > 0);
-        }
-        
         public bool Update_Reload(CombatStartEvent in_prev_CombatStartEvent)
         {
             //System.Diagnostics.Debug.WriteLine("Strict / Full:\n{0} ==\n{1}", in_prev_CombatStartEvent.Get_Full_Strict_Combat_String(), Get_Full_Strict_Combat_String());

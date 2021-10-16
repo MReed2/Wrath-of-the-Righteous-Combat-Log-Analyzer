@@ -51,7 +51,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
             set
             {
-                if (value != Character_Type)
+                if (value != _Character_Type)
                 {
                     _Character_Type = value;
                     OnCombatEventChanged?.Invoke(this);

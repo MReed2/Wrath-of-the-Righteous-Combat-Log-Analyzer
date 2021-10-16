@@ -74,6 +74,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             {
                 //<div style="margin-left:   0px"><b><b><span style="color:#224863">Wenduag_Companion[c2c0dfd3]</span></b></b> deals <b>15</b> damage (reduced) to <b><b><span style="color:#262626">Zerieks[1507b0b0]</span></b></b>.</div>
                 //<div style="margin-left:   0px">IvorySanctum_MythicSchir[dcbf72f7]<b><b><span style="color:#262626"></span></b></b> deals <b>10</b> damage (reduced) to <b><b><span style="color:#AF501F">Ember_Companion[a7e209db]</span></b></b>.</div>
+                //<div style="margin-left:   0px"><b><b><span style="color:#262626">CR18M_MythicCrazyGlabrezu[19242dff]</span></b></b> deals <b>25</b> damage (reduced) to <b><b><span style="color:#262626"></span></b></b>.</div>
+                // Yes, the line above legitmately has an empty string for the target.  How amazing is that (not!).
                 Source += line + "\n";
                 _init_done = true;
 
@@ -87,18 +89,26 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 _Damage = int.Parse(damage_header.Groups[2].Value);
                 _Target_Character_Name = damage_header.Groups[3].Value;
                 _Source_Target_Character_Name = damage_header.Groups[3].Value;
+                if (_Target_Character_Name == "")
+                {
+                    _Target_Character_Name = "NULL";
+                    _Source_Target_Character_Name = "NULL";
+                }
             }
             else if (line.Contains(" receives ") && line.Contains("damage."))
             {
                 // Yes, indeed, self-damge isn't recorded the same way as damage to others.  Isn't this fun!
 
                 //<div style="margin-left:   0px"><b><b><span style="color:#262626">WintersunWintersunSiabrae[f514fbd4][f514fbd4]</span></b></b> receives <b>8</b> damage.</div>
+                //<div style="margin-left:   0px"><b><b><span style="color:#262626">AreeluLab_AreeluLab_Derakni[4a13ac82][4a13ac82]</span></b></b> receives <b>24</b> damage.</div>
                 Source += line + "\n";
                 _init_done = true;
 
                 GroupCollection damage_header = Regex.Match(line, @"(?:.*?\x22>){2}(.*?]).*>(\d*)<").Groups;
                 _Character_Name = damage_header[1].Value;
                 _Source_Character_Name = damage_header[1].Value;
+                _Source_Target_Character_Name = damage_header[1].Value;
+                _Target_Character_Name = damage_header[1].Value;
                 _Damage = int.Parse(damage_header[2].Value);
                 _Target_Character_Name = damage_header[1].Value; // Target is the same as the source.
             }

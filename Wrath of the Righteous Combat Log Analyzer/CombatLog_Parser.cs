@@ -270,6 +270,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                                 {
                                     if (new_event is CombatStartEvent)
                                     {
+                                        System.Diagnostics.Debug.WriteLine("Start of new combat");
                                         if (_Prev_Start_Of_Combat != null)
                                         {
                                             _Curr_Start_Of_Combat.Update_Smarter_Guesses_Character_Types();

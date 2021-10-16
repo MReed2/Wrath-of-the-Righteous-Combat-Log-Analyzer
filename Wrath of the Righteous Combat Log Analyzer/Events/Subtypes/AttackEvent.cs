@@ -293,7 +293,15 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 }
                 //<div style="margin-left: 0px"><b><b><span style="color:#224863">Wenduag_Companion[c2c0dfd3]</span></b></b> attacks <b><b><span style="color:#262626">Zerieks[1507b0b0]</span></b></b> with <b>Shock Flaming Corrosive Cold Iron Kukri +3</b>. Hit</div>
                 //<div style="margin-left:   0px"><b><b><span style="color:#262626">CR17_Mercenary_Human_Melee_Male[99e83994]</span></b></b> attacks <b><b><span style="color:#224863">Wenduag_Companion[c2c0dfd3]</span></b></b> with <b>Punching Dagger</b>. Hit Sneak attack!</div>
+                //
+                //Screwy formatting -- amazing work there, Owlcat.
+                //
                 //<div style="margin-left:   0px">IvorySanctum_MythicSchir[dcbf72f7]<b><b><span style="color:#262626"></span></b></b> attacks <b><b><span style="color:#AF501F">Ember_Companion[a7e209db]</span></b></b> with <b>Masterwork Bardiche</b>. Hit</div>
+                //
+                //Yeap, its possible to have a NULL target for an attack as well.  Isn't Owlcat **wonderful**?
+                //
+                //<div style="margin-left:   0px"><b><b><span style="color:#1356B1">Arueshalae_Companion[41735ffc]</span></b></b> attacks <b><b><span style="color:#262626"></span></b></b> with <b>Eye for an Eye</b>. Critical hit! Sneak attack!</div>
+                //
                 Source += line + "\n";
 
                 Match attack_hdr = Regex.Match(line, @"(?:\x22>.*?){2}(.*?)<.*?\x22>(.*?)<.*h .*?>(.*?)<.*? (.*?)<");
@@ -304,13 +312,14 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                         attack_hdr = Regex.Match(line, @"(?:\x22>.*?)(.*?)<.*?\x22>.*\x22>(.*?)<.*h .*?>(.*?)<.*? (.*?)<");
                     }
                     _Character_Name = attack_hdr.Groups[1].Value;
-                    if (_Character_Name == "")
-                    {
-                        int zxkl = 1;
-                    }
                     _Source_Character_Name = attack_hdr.Groups[1].Value;
                     _Target_Character_Name = attack_hdr.Groups[2].Value;
                     _Source_Target_Character_Name = attack_hdr.Groups[2].Value;
+                    if (_Target_Character_Name == "")
+                    {
+                        _Target_Character_Name = "NULL";
+                        _Source_Target_Character_Name = "NULL";
+                    }
                     _Weapon = attack_hdr.Groups[3].Value;
                     _Attack_Success = (attack_hdr.Groups[4].Value.ToLower().Contains("hit"));
                     _Sneak_Attack = (attack_hdr.Groups[4].Value.ToLower().Contains("sneak attack"));

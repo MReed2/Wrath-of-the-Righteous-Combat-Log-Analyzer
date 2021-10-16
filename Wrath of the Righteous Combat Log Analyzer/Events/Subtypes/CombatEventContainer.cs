@@ -38,6 +38,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private int _Children_Count_When_Stats_Last_Refreshed = -1;
         private bool _Has_Rendered_Character_UC_After_Refresh = false;
         private bool _Has_Rendered_Stats_UC_After_Refresh = false;
+        private bool _Updating_Characters_List = false;
 
         private bool _Characters_Updating_Async = false;
         private bool _Stats_Updating_Async = false;
@@ -58,18 +59,40 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         {
             get
             {
-                Update_Characters_List();
+                if (!_Updating_Characters_List) { Update_Characters_List(); }
                 return _Characters;
             }
         }
 
         public CharacterList Characters_Override { get => _Characters_Override; }
 
+        public void Update_Smarter_Guesses_Character_Types()
+        {
+            int changed_cnt = 0;
+            int loop_cnt = 0;
+
+            do
+            {
+                //System.Diagnostics.Debug.WriteLine("Loop Cnt = {0}", loop_cnt);
+                changed_cnt = 0;
+                loop_cnt++;
+                if (loop_cnt > 5) { throw new System.Exception("Stuck in a loop"); }
+                foreach (CharacterListItem curr_char in Characters)
+                {
+                    //System.Diagnostics.Debug.WriteLine("Checking {0}", curr_char.Source_Character_Name);
+                    changed_cnt += curr_char.Update_Smarter_Guesses_Character_Types(curr_char);
+                }
+                // System.Diagnostics.Debug.WriteLine("changed_cnt = {0}", changed_cnt);
+            } while ((changed_cnt > 0));
+        }
+
         protected void Update_Characters_List()
         {
             // *Don't* clear the _Characters list!
             //
             // Any overrides the users has applied should still be valid -- we just need to add more items to the list, or update it with changes from elsewhere
+
+            _Updating_Characters_List = true; // Suppress change notifications while the update is performed.
 
             if ((_Children_Count_When_Characters_Last_Refreshed != Children.Count)||(_Children_Changed))
             {
@@ -86,10 +109,13 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     } // CharacterListItem and CharacterList manage duplicate entries -- no need to do so here
                 }//);
 
+                Update_Smarter_Guesses_Character_Types();
+
                 _Children_Count_When_Characters_Last_Refreshed = Children.Count;
                 _Children_Changed = false;
                 _Has_Rendered_Character_UC_After_Refresh = false; // Need to rebuild the control.
                 _Has_Rendered_Stats_UC_After_Refresh = false; // Stats also need to be rebuilt.
+                _Updating_Characters_List = false; // Reenable change notifications.
             }
         }
 
@@ -111,7 +137,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         private void CombatEventChanged(CombatEvent source)
         {
-            _Children_Changed = true;
+            if (!_Updating_Characters_List) { _Children_Changed = true; }
         }
 
         private UserControl Update_Characters_UserControl()
