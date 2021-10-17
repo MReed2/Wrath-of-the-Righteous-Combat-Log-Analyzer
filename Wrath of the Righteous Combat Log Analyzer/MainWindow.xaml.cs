@@ -394,7 +394,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             if ((new_itm == null)||(new_itm.IsLoading))
             {
-                DetailScrollViewer.Content = null;
+                DetailBorder.Child = null;
                 if (new_itm != null) { new_itm.IsSelected = false; }
             }
             else if (new_itm.Tag != null)
@@ -402,7 +402,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 CombatEvent new_data_itm = (CombatEvent)new_itm.Tag;
 
                 UserControl new_uc = new_data_itm.Update_Display_UserControl(); // this creates the control, if required.
-                DetailScrollViewer.Content = new_uc;
+                DetailBorder.Child = new_uc;
             }
         }
 

@@ -132,8 +132,16 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             if (_UC_For_Characters == null)
             {
                 _UC_For_Characters = new UserControl();
+                /*
+                ScrollViewer scrollViewer = new ScrollViewer() { HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+                _UC_For_Characters.Content = scrollViewer;
+                */
+                DockPanel dockPanel = new DockPanel() { LastChildFill = true };
+                _UC_For_Characters.Content = dockPanel;
+
                 Grid grid = new Grid();
-                _UC_For_Characters.Content = grid;
+                DockPanel.SetDock(grid, Dock.Top);
+                dockPanel.Children.Add(grid);
             }
 
             return _UC_For_Characters;
@@ -154,7 +162,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             _Has_Rendered_Character_UC_After_Refresh = true;
 
-            Grid grid = (Grid)tmp_UC.Content;
+            // Grid grid = ((Grid)((DockPanel)((ScrollViewer)tmp_UC.Content).Content).Children[0]);
+            Grid grid = ((Grid)((DockPanel)tmp_UC.Content).Children[0]);
             grid.Children.Clear();
             grid.RowDefinitions.Clear();
             grid.ColumnDefinitions.Clear();
@@ -631,7 +640,16 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             {
                 _UC_For_Display = new UserControl();
 
+                ScrollViewer scrollViewer = new ScrollViewer() { HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+                _UC_For_Display.Content = scrollViewer;
+
+                DockPanel dockPanel = new DockPanel() { LastChildFill = true };
+                scrollViewer.Content = dockPanel;
+
                 Grid grid = new Grid();
+                DockPanel.SetDock(grid, Dock.Top);
+                dockPanel.Children.Add(grid);
+                
                 grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new System.Windows.GridLength(0, System.Windows.GridUnitType.Star) });
                 grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new System.Windows.GridLength(50, System.Windows.GridUnitType.Star) });
 
@@ -662,8 +680,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
                 _Stats_Panel.Children.Clear();
                 _Stats_Panel.Children.Add(_Stats.Get_Analysis_UserControl());
-
-                _UC_For_Display.Content = grid;
             }
 
             return _UC_For_Display;

@@ -605,232 +605,80 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             return Get_UserControl_For_Display();
         }
 
+        private string Die_Rolls_To_String(List<Die_Roll> inRolls)
+        {
+            string rtn = "";
+            foreach (Die_Roll curr_roll in inRolls) { rtn += curr_roll.Roll.ToString() + ", "; }
+            if (inRolls.Count > 0) { rtn = rtn.Substring(0, rtn.Length - 2); }
+            else { rtn = "N/A"; }
+            return rtn;
+        }
+
         public override UserControl Get_UserControl_For_Display()
         {
             UserControl uc = new UserControl();
 
-            Grid grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition());
-            grid.ColumnDefinitions.Add(new ColumnDefinition());
-
-            grid.ColumnDefinitions[0].Width = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto);
-
-            string[] label_list = {
-                "Character Name",
-                "Target",
-                "Weapon",
-                "",
-                "Concealment Miss Chance",
-                "Concealment Die Roll (d100)",
-                "Concealment Result",
-                "",
-                "Attack Bonus",
-                "Target AC",
-                "Needed To Hit",
-                "To Hit Roll (d20)",
-                "Result",
-                "",
-                "Critical Hit Bonus",
-                "Target AC ",
-                "Needed to confirm",
-                "Confirmation Roll (d20)",
-                "Critical Result"
-                };
-
-            int cnt = 0;
-            foreach (string curr_label in label_list)
+            string[,] data =
             {
-                RowDefinition r = new RowDefinition();
-                r.Height = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto);
-                grid.RowDefinitions.Add(r);
+                { "Character Faction", Character_Type_To_String(Character_Type) },
+                { "Character Name", Source_Character_Name },
+                { "Friendly Character Name", Friendly_Name },
+                { "", "" },
+                { "", "" },
 
-                if (curr_label != "")
-                {
-                    Label lbl = new Label();
-                    lbl.Content = curr_label;
-                    Grid.SetColumn(lbl, 0);
-                    Grid.SetRow(lbl, cnt);
+                { "Target Faction", Character_Type_To_String(Target_Character_Type) },
+                { "Target Character Name", Source_Target_Character_Name },
+                { "Target Friendly Name", Target_Friendly_Name },
+                { "", "" },
+                { "", "" },
 
-                    TextBox tb = new TextBox();
-                    switch (curr_label)
-                    {
-                        case "Character Name": tb.Text = _Character_Name; break;
-                        case "Target": tb.Text = _Target_Character_Name; break;
-                        case "Weapon": tb.Text = _Weapon; break;
-                        case "Concealment Miss Chance": tb.Text = _Concealment_Miss_Chance.ToString()+" %"; break;
-                        case "Concealment Die Roll (d100)":
-                            foreach (Die_Roll curr_roll in _Concealment_Die_Rolls)
-                            {
-                                tb.Text += ", " + curr_roll.Roll.ToString();
-                            }
-                            if (tb.Text == "")
-                            {
-                                tb.Text = "N/A";
-                            }
-                            else
-                            {
-                                tb.Text = tb.Text.Substring(1);
-                            }
-                            break;
-                        case "Concealment Result":
-                            if (_Attack_Bonus == -999)
-                            {
-                                tb.Text = "Missed";
-                            }
-                            else
-                            {
-                                tb.Text = "Bypassed";
-                            }
-                            break;
-                        case "Attack Bonus":
-                            if (_Attack_Bonus == -999)
-                            {
-                                tb.Text = "N/A (Missed due to concealment";
-                            }
-                            else
-                            {
-                                tb.Text = ((_Attack_Bonus <= 0) ? _Attack_Bonus.ToString() : "+" + _Attack_Bonus.ToString());
-                            }
-                            break;
-                        case "Target AC": 
-                            if (_Target_AC == -999)
-                            {
-                                tb.Text = "N/A (Missed due to concealment";
-                            }
-                            else
-                            {
-                                tb.Text = _Target_AC.ToString();
-                            }
-                            break;
-                        case "Needed To Hit":
-                            if (_Attack_Bonus == -999)
-                            {
-                                tb.Text = "N/A (Missed due to concealment";
-                            }
-                            else
-                            {
-                                int target = _Target_AC - _Attack_Bonus;
-                                if (target < 0) { target = 0; }
-                                if (target > 20) { target = 20; }
-                                tb.Text = target.ToString();
-                            }
-                            break;
-                        case "To Hit Roll (d20)":
-                            foreach (Die_Roll curr_roll in _Attack_Die_Rolls)
-                            {
-                                tb.Text += ", " + curr_roll.Roll.ToString();
-                            }
-                            if (tb.Text == "")
-                            {
-                                tb.Text = "N/A";
-                            }
-                            else
-                            {
-                                tb.Text = tb.Text.Substring(2);
-                            }
-                            break;
-                        case "Result": tb.Text = (_Attack_Success ? "Hit" : "Miss"); break;
-                        case "Critical Hit Bonus":
-                            if (_Critical_Confirmation_Bonus == -999)
-                            {
-                                if (_Critical_Confirmation_Rolls.Count > 0)
-                                {
-                                    tb.Text = "Unknown (value not specified in log)";
-                                }
-                                else
-                                {
-                                    tb.Text = "N/A (didn't threaten a critical hit)";
-                                }
-                            }
-                            else
-                            {
-                                tb.Text = ((_Critical_Confirmation_Bonus <= 0) ? _Critical_Confirmation_Bonus.ToString() : "+" + _Critical_Confirmation_Bonus.ToString());
-                            }
-                            break;
-                        case "Target AC ":
-                            if (_Critical_Confirmation_Bonus == -999)
-                            {
-                                if (_Critical_Confirmation_Rolls.Count > 0)
-                                {
-                                    tb.Text = _Target_AC.ToString();
-                                }
-                                else
-                                {
-                                    tb.Text = "N/A (didn't threaten a critical hit)";
-                                }
-                            }
-                            else
-                            {
-                                tb.Text = _Target_AC.ToString();
-                            }
-                            break;
-                        case "Needed to confirm":
-                            if (_Critical_Confirmation_Bonus == -999)
-                            {
-                                if (_Critical_Confirmation_Rolls.Count > 0)
-                                {
-                                    tb.Text = Need_To_Roll_To_Confirm_Critical.ToString();
-                                }
-                                else
-                                {
-                                    tb.Text = "N/A (didn't threaten a critical hit)";
-                                }
-                            }
-                            else
-                            {
-                                tb.Text = Need_To_Roll_To_Confirm_Critical.ToString();
-                            }
-                            break;
-                        case "Confirmation Roll (d20)":
-                            foreach (Die_Roll curr_roll in _Critical_Confirmation_Rolls)
-                            {
-                                tb.Text += ", " + curr_roll.Roll.ToString();
-                            }
-                            if (tb.Text == "")
-                            {
-                                tb.Text = "N/A (didn't threaten a critical hit)";
-                            }
-                            else
-                            {
-                                tb.Text = tb.Text.Substring(2);
-                            }
-                            break;
-                        case "Critical Result":
-                            tb.Text = (_Attack_Critical ? "Critical hit" : "Not a critical hit");
-                            break;
-                    }
-                    tb.IsReadOnly = true;
-                    Grid.SetColumn(tb, 1);
-                    Grid.SetRow(tb, cnt);
+                { "Attack Bonus", (_Attack_Bonus==-999)?"N/A (Missed due to concealment)":_Attack_Bonus.ToString() },
+                { "Target AC", (_Target_AC==-999)?"N/A (Missed due to concealment)":_Target_AC.ToString() },
+                { "Needed to hit", (Need_To_Roll_To_Hit==-999)?"N/A (Missed due to concealment)":Need_To_Roll_To_Hit.ToString() },
+                { "To Hit Roll(s)", Die_Rolls_To_String(_Attack_Die_Rolls) },
+                { "Result", (_Attack_Success)?"Hit":"Miss" },
 
-                    grid.Children.Add(lbl);
-                    grid.Children.Add(tb);
-                }
+                { "Critical Hit Bonus", (_Critical_Confirmation_Bonus==-999)?"N/A (No Threat)":_Critical_Confirmation_Bonus.ToString() },
+                { "Target AC", (_Target_AC==-999)?"N/A (No Threat)":_Target_AC.ToString() },
+                { "Needed to confirm",  (Need_To_Roll_To_Confirm_Critical==-999)?"N/A (No Threat)":Need_To_Roll_To_Confirm_Critical.ToString() },
+                { "Critical Confirmation Roll(s)", Die_Rolls_To_String(_Critical_Confirmation_Rolls) },
+                { "Critical Result", (_Attack_Critical)?"Critical Hit":"Not a critical hit" },
 
-                cnt++;
-            }
+                { "Concealment Miss Chance",  _Concealment_Miss_Chance.ToString()+" %" },
+                { "Concealment Die Roll(s)", Die_Rolls_To_String(_Concealment_Die_Rolls) },
+                { "Concealment Result", (_Attack_Bonus==-999)?"Missed":(_Concealment_Miss_Chance==0)?"N/A":"Bypassed" },
+                { "", "" },
+                { "", "" },
 
-            RowDefinition source_r = new RowDefinition();
-            source_r.Height = new System.Windows.GridLength(10, System.Windows.GridUnitType.Star);
-            grid.RowDefinitions.Add(source_r);
+            };
 
-            Label source_lbl = new Label();
-            source_lbl.Content = "Source";
-            Grid.SetColumn(source_lbl, 0);
-            Grid.SetRow(source_lbl, cnt);
+            Grid outer_grid = new Grid();
+            outer_grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new System.Windows.GridLength(10, System.Windows.GridUnitType.Star) });
 
-            WebBrowser wb = new WebBrowser();
+            outer_grid.RowDefinitions.Add(new RowDefinition() { Height = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto) });
+            ScrollViewer scrollViewer = New_Windows_Table("Data", data, 5, 1500);
+            Grid.SetRow(scrollViewer, 0);
+            Grid.SetColumn(scrollViewer, 0);
+            outer_grid.Children.Add(scrollViewer);
 
-            wb.NavigateToString(Source_With_ID.Replace("–", "-").Replace("—", "--").Replace("×", "x"));
-            Grid.SetColumn(wb, 1);
-            Grid.SetRow(wb, cnt);
+            outer_grid.RowDefinitions.Add(new RowDefinition() { Height = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto) });
+            TextBlock source_title = new TextBlock() { HorizontalAlignment = System.Windows.HorizontalAlignment.Center };
+            source_title.Inlines.Add(new System.Windows.Documents.Run("Source") { FontWeight = System.Windows.FontWeights.Bold, TextDecorations = System.Windows.TextDecorations.Underline });
+            Grid.SetRow(source_title, 1);
+            Grid.SetColumn(source_title, 0);
+            outer_grid.Children.Add(source_title);
 
-            grid.Children.Add(source_lbl);
-            grid.Children.Add(wb);
+            WebBrowser webBrowser = New_WebBrowser();
+            webBrowser.NavigateToString(Filter_String_For_WebBrowser(Source_With_ID));
 
-            cnt++;
+            DockPanel dockPanel = new DockPanel() { LastChildFill = true };
+            DockPanel.SetDock(outer_grid, Dock.Top);
+            dockPanel.Children.Add(outer_grid);
 
-            uc.Content = grid;
+            DockPanel.SetDock(webBrowser, Dock.Bottom);
+            dockPanel.Children.Add(webBrowser);
+
+            uc.Content = dockPanel;
             return uc;
         }
     }

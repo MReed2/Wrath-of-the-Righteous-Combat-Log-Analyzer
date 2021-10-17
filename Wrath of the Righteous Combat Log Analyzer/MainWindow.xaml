@@ -45,9 +45,7 @@
                         <TreeView Template="{StaticResource NoScroll}" SelectedItemChanged="MasterTreeView_SelectedItemChanged" x:Name="MasterTreeView" VirtualizingPanel.IsVirtualizing="True"/>
                     </ScrollViewer>
                 </Border>
-                <Border DockPanel.Dock="Right">
-                    <ScrollViewer Name="DetailScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                    </ScrollViewer>
+                <Border Name="DetailBorder" DockPanel.Dock="Right">
                 </Border>
             </DockPanel>
         </Grid>

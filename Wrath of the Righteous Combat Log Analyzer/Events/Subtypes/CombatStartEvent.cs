@@ -17,6 +17,25 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         public override string Character_Name { get => ""; set => throw new NotImplementedException(); }
         public override string Source_Character_Name => throw new NotImplementedException();
         public override List<Die_Roll> Die_Rolls => _Die_Rolls;
+        public override string Source
+        {
+            get
+            {
+                StringBuilder tmp = new StringBuilder(base.Source);
+                foreach (CombatEvent curr_evnt in Children) { tmp.Append("\n"+curr_evnt.Source); }
+                return tmp.ToString();
+            }
+            set => base.Source = value;
+        }
+        public override string Source_With_ID
+        {
+            get
+            {
+                StringBuilder tmp = new StringBuilder(base.Source_With_ID);
+                foreach (CombatEvent curr_evnt in Children) { tmp.Append("\n" + curr_evnt.Source_With_ID); }
+                return tmp.ToString();
+            }
+        }
         #endregion
         #region Override Methods
         public override List<Die_Roll> Parse(string line)
@@ -46,6 +65,9 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         public int Loose_Full_Reload_Cnt { get => _Loose_Full_Reload_Cnt; }
         public int Strict_Starting_Reload_Cnt { get => _Strict_Starting_Reload_Cnt; }
         public int Loose_Starting_Reload_Cnt { get => _Loose_Starting_Reload_Cnt;  }
+
+        public bool IsReload { get => ((Strict_Full_Reload_Cnt > 0) || (Loose_Full_Reload_Cnt > 0) || (Strict_Starting_Reload_Cnt > 0) || (Loose_Starting_Reload_Cnt > 0)); }
+        public int Reload_Cnt { get => Math.Max(Strict_Full_Reload_Cnt, Math.Max(Loose_Full_Reload_Cnt, Math.Max(Strict_Starting_Reload_Cnt, Loose_Starting_Reload_Cnt))); }
 
         public bool Update_Reload(CombatStartEvent in_prev_CombatStartEvent)
         {
@@ -122,7 +144,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 int early_threshold = (int)Math.Round((float)max_ID * 0.75);
                 foreach (CharacterListItem curr_itm in rtn)
                 {
-                    if (curr_itm.Parent.ID > early_threshold)
+                    if (curr_itm.Parent.ID < early_threshold)
                     {
                         chars_to_remove.Add(curr_itm);
                     }
@@ -131,55 +153,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
 
             return rtn;
-
-            /*
-            List<KeyValuePair<CombatEvent, CharacterListItem>> init_event_lst = new List<KeyValuePair<CombatEvent, CharacterListItem>>();
-
-            int min_non_init_non_simple_event_id = int.MaxValue;
-            
-            foreach (CharacterListItem curr_char in Characters.GetAll())
-            {
-                if (curr_char.Character_Type == Char_Enum.Friendly) { continue; }
-                int min_init_ID = int.MaxValue;
-                InitiativeEvent min_init = null;
-
-                foreach (CombatEvent curr_evnt in curr_char.Parents)
-                {
-                    if ((curr_evnt is InitiativeEvent)&&(curr_evnt.ID < min_init_ID))
-                    {
-                        min_init_ID = curr_evnt.ID;
-                        min_init = (InitiativeEvent)curr_evnt;
-                    }
-                    else
-                    {
-                        if (curr_evnt is SimpleEvent) { }
-                        else
-                        {
-                            if (min_non_init_non_simple_event_id > curr_evnt.ID)
-                            {
-                                min_non_init_non_simple_event_id = curr_evnt.ID;
-                            }
-                        }
-                    }
-                }
-
-                if (min_init != null) { init_event_lst.Add(new KeyValuePair<CombatEvent, CharacterListItem>(min_init, curr_char)); }
-            }
-
-            if (min_non_init_non_simple_event_id == int.MaxValue) { throw new System.Exception("No events processed in Get_Initiative_Only_Characters"); }
-            if (init_event_lst.Count == 0) { throw new System.Exception("No hostile inititative events found in Get_Initiative_Only_Characters"); }
-
-            foreach (KeyValuePair<CombatEvent, CharacterListItem> curr_kvp in init_event_lst)
-            {
-                if (only_early) { if (min_non_init_non_simple_event_id > curr_kvp.Key.ID) { rtn.Add(curr_kvp.Value); } }
-                else { rtn.Add(curr_kvp.Value); }
-            }
-
-            if (rtn.Count == 0) { throw new System.Exception("No initative events found at start of combat in Get_Initiative_Only_Characters"); }
-
-            rtn.Sort((a, b) => a.Parent.ID.CompareTo(b.Parent.ID) ); // Parent (with no s) is guranteed to be the record with the lowest ID of all the potential parents.
-
-            return rtn; */
         }
 
         private string Get_Delimited_String_From_List(List<CharacterListItem> inLst, Func<CharacterListItem, string> inName, bool Add_Cnt = true)
@@ -208,88 +181,62 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             if (_UC_For_Display == null)
             {
                 _UC_For_Display = base.Get_UserControl_For_Display();
-                Grid outer_grid = (Grid)_UC_For_Display.Content;
+
+                Grid outer_grid = ((Grid)((DockPanel)((ScrollViewer)_UC_For_Display.Content).Content).Children[0]);
+                               
+                string[,] data =
+                {
+                    { "# of Events", Children.Count.ToString() },
+                    { "# of Characters", Characters.GetAll().Count.ToString() },
+                    { "# of Unique Characters", Characters.Count.ToString() },
+                    { "# of Friendly Characters", Characters.GetAll().FindAll(m => (m.Character_Type == Char_Enum.Friendly)).Count.ToString() },
+                    { "# of Hostile Characters", Characters.GetAll().FindAll(m => (m.Character_Type == Char_Enum.Hostile)).Count.ToString() },
+                    { "# of Summoned Characters", Characters.GetAll().FindAll(m => (m.Character_Type == Char_Enum.Summon)).Count.ToString() },
+                    { "# of Unknown Characters", Characters.GetAll().FindAll(m => (m.Character_Type == Char_Enum.Unknown)).Count.ToString() },
+                    { "# of Really Unknown Characters", Characters.GetAll().FindAll(m => (m.Character_Type == Char_Enum.Really_Unknown)).Count.ToString() },
+
+                    { "# of Attack Events", Children.FindAll(m => (m is AttackEvent)).Count.ToString() },
+                    { "# of Damage Events", Children.FindAll(m => (m is DamageEvent)).Count.ToString() },
+                    { "# of Healing Events", Children.FindAll(m => (m is HealingEvent)).Count.ToString() },
+                    { "# of Death Events", Children.FindAll(m => ( (m is SimpleEvent)&&(((SimpleEvent)m).Subtype == "Death") )).Count.ToString() },
+                    { "Is Reload?", IsReload.ToString() },
+                    { "Reload Count", Reload_Cnt.ToString() },
+                    { "", "" },
+                    { "", "" }
+                };
+                
                 outer_grid.RowDefinitions.Add(new RowDefinition() { Height = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto) });
+                ScrollViewer scrollViewer = New_Windows_Table("Data", data, 2, 500);
+                Grid.SetRow(scrollViewer, outer_grid.RowDefinitions.Count-1);
+                Grid.SetColumn(scrollViewer, 0);
+                Grid.SetColumnSpan(scrollViewer, 2);
+                outer_grid.Children.Add(scrollViewer);
 
-                Grid grid = new Grid();
-                grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new System.Windows.GridLength(0, System.Windows.GridUnitType.Star) });
-                grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new System.Windows.GridLength(10, System.Windows.GridUnitType.Star) });
+                outer_grid.RowDefinitions.Add(new RowDefinition() { Height = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto) });
+                TextBlock source_title = new TextBlock() { HorizontalAlignment = System.Windows.HorizontalAlignment.Center };
+                source_title.Inlines.Add(new System.Windows.Documents.Run("Source") { FontWeight = System.Windows.FontWeights.Bold, TextDecorations = System.Windows.TextDecorations.Underline });
+                Grid.SetRow(source_title, outer_grid.RowDefinitions.Count-1);
+                Grid.SetColumn(source_title, 0);
+                Grid.SetColumnSpan(source_title, 2);
+                outer_grid.Children.Add(source_title);
 
-                Grid.SetRow(grid, 3);
-                Grid.SetColumn(grid, 0);
-                Grid.SetColumnSpan(grid, 2);
-                outer_grid.Children.Add(grid);
+                WebBrowser webBrowser = New_WebBrowser();
+                webBrowser.NavigateToString(Filter_String_For_WebBrowser(Source_With_ID));
 
-                string[] label_list = {
-                "Event Type",
-                "Number of children"
-                };
+                outer_grid.RowDefinitions.Add(new RowDefinition() { Height = new System.Windows.GridLength(800, System.Windows.GridUnitType.Pixel) });
+                Grid.SetRow(webBrowser, outer_grid.RowDefinitions.Count-1);
+                Grid.SetColumn(webBrowser, 0);
+                Grid.SetColumnSpan(webBrowser, 2);
+                outer_grid.Children.Add(webBrowser);
+                /*DockPanel dockPanel = new DockPanel() { LastChildFill = true };
+                DockPanel.SetDock(outer_grid, Dock.Top);
+                dockPanel.Children.Add(outer_grid);
 
-                int row = 0;
+                DockPanel.SetDock(webBrowser, Dock.Bottom);
+                dockPanel.Children.Add(webBrowser);
 
-                foreach (string curr_label in label_list)
-                {
-                    RowDefinition r = new RowDefinition();
-                    r.Height = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto);
-                    grid.RowDefinitions.Add(r);
-
-                    if (curr_label != "")
-                    {
-                        Label lbl = new Label()
-                        {
-                            Content = curr_label,
-                            HorizontalAlignment = System.Windows.HorizontalAlignment.Left
-                        };
-
-                        Grid.SetColumn(lbl, 0);
-                        Grid.SetRow(lbl, row);
-
-                        TextBox tb = new TextBox();
-                        switch (curr_label)
-                        {
-                            case "Event Type": tb.Text = "Combat Start"; break;
-                            case "Number of children": tb.Text = Children.Count.ToString(); break;
-                        }
-                        tb.IsReadOnly = true;
-                        Grid.SetColumn(tb, 1);
-                        Grid.SetRow(tb, row);
-
-                        grid.Children.Add(lbl);
-                        grid.Children.Add(tb);
-                    }
-
-                    row++;
-                }
-                //I'm not sure why this is necesary, but it is.
-                grid.RowDefinitions.Add(new RowDefinition() { Height = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto) });
-
-                RowDefinition source_r = new RowDefinition();
-                source_r.Height = new System.Windows.GridLength(50, System.Windows.GridUnitType.Star);
-                grid.RowDefinitions.Add(source_r);
-
-                Label source_lbl = new Label();
-                source_lbl.Content = "Source";
-                Grid.SetColumn(source_lbl, 0);
-                Grid.SetRow(source_lbl, row);
-
-                WebBrowser wb = new WebBrowser()
-                {
-                    MaxHeight = 750
-                };
-
-                System.Text.StringBuilder long_str = new StringBuilder(Source_With_ID.Replace("–", "-").Replace("—", "--").Replace("×", "x"));
-
-                foreach (CombatEvent curr_event in Children)
-                {
-                    long_str.Append(curr_event.Source_With_ID.Replace("–", "-").Replace("—", "--").Replace("×", "x"));
-                }
-
-                wb.NavigateToString(long_str.ToString());
-                Grid.SetColumn(wb, 1);
-                Grid.SetRow(wb, row);
-
-                grid.Children.Add(source_lbl);
-                grid.Children.Add(wb);
+                uc.Content = dockPanel;*/
+                return _UC_For_Display;
             }
             
             return _UC_For_Display;

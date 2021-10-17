@@ -3,6 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
 using System.Text.RegularExpressions;
 
 namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
@@ -107,9 +116,9 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
         }
 
-        public string Source_With_ID { get => Regex.Replace(_Source, @"(^.*?\x22>)", "$1ID: " + _ID.ToString() + " ", RegexOptions.None); }
+        public virtual string Source_With_ID { get => Regex.Replace(_Source, @"(^.*?\x22>)", "$1ID: " + _ID.ToString() + " ", RegexOptions.None); }
 
-        public string Source { get => _Source; set => _Source = value; }
+        public virtual string Source { get => _Source; set => _Source = value; }
 
         public int ID { get => _ID; }
 
@@ -143,6 +152,133 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             rtn = rtn.Trim();
 
             return rtn;
+        }
+
+        protected ScrollViewer New_Windows_Table(string title, string[,] array_to_display, int num_of_columns = 1, int MinWidth = 0)
+        {
+            Grid outer_grid = new Grid();
+            if (MinWidth != 0) outer_grid.MinWidth = MinWidth;
+            
+            for (int x=0; x<num_of_columns; x++) { outer_grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(10, GridUnitType.Star) }); }
+
+            if (title != "")
+            {
+                outer_grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(0, GridUnitType.Auto) });
+                TextBlock title_tb = new TextBlock() { HorizontalAlignment = HorizontalAlignment.Center };
+                title_tb.Inlines.Add(new Run(title) { FontWeight = FontWeights.Bold, TextDecorations = TextDecorations.Underline });
+                Grid.SetRow(title_tb, outer_grid.RowDefinitions.Count - 1);
+                Grid.SetColumn(title_tb, 0);
+                Grid.SetColumnSpan(title_tb, num_of_columns);
+                outer_grid.Children.Add(title_tb);
+            }
+
+            int num_items_per_col = (array_to_display.GetUpperBound(0)+1) / num_of_columns;
+
+            outer_grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(0, GridUnitType.Auto) });
+
+            for (int col = 0; col < num_of_columns; col++)
+            {
+                Grid new_win_grid = Create_A_Windows_Table(array_to_display, num_items_per_col * col, num_items_per_col * (col+1) - 1);
+                Grid.SetRow(new_win_grid, outer_grid.RowDefinitions.Count - 1);
+                Grid.SetColumn(new_win_grid, col);
+                outer_grid.Children.Add(new_win_grid);
+            }
+
+            ScrollViewer scrollViewer = new ScrollViewer() { HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
+            scrollViewer.Content = outer_grid;
+
+            return scrollViewer;
+        }
+
+        protected Grid Create_A_Windows_Table(string[,] inArray, int start_row = 0, int end_row = int.MaxValue)
+        {
+            if (end_row > inArray.GetUpperBound(0)) { end_row = inArray.GetUpperBound(0); }
+
+            Grid outer_grid = new Grid();
+
+            for (int col = 0; col <= inArray.GetUpperBound(1); col++) 
+            {
+                outer_grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(10, GridUnitType.Star) });
+            }
+
+            for (int row = start_row; row <= end_row; row++)
+            {
+                outer_grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(0, GridUnitType.Auto) });
+            }
+
+            for (int row = start_row; row <= end_row; row++)
+            {
+                Line top_border = new Line() { StrokeThickness = 1, Stroke = Brushes.Black, VerticalAlignment = VerticalAlignment.Top };
+                BindingOperations.SetBinding(top_border, Line.X2Property, new Binding("ActualWidth") { RelativeSource = new RelativeSource(RelativeSourceMode.Self) });
+
+                Grid.SetRow(top_border, row-start_row);
+                Grid.SetColumn(top_border, 0);
+                Grid.SetColumnSpan(top_border, inArray.GetUpperBound(1) + 1);
+                outer_grid.Children.Add(top_border);
+
+                if (row == end_row)
+                {
+                    Line bottom_border = new Line { StrokeThickness = 1, Stroke = Brushes.Black, VerticalAlignment = VerticalAlignment.Bottom };
+                    BindingOperations.SetBinding(bottom_border, Line.X2Property, new Binding("ActualWidth") { RelativeSource = new RelativeSource(RelativeSourceMode.Self) });
+
+                    Grid.SetRow(bottom_border, row - start_row);
+                    Grid.SetColumn(bottom_border, 0);
+                    Grid.SetColumnSpan(bottom_border, inArray.GetUpperBound(1) + 1);
+                    outer_grid.Children.Add(bottom_border);
+                }
+
+                for (int col = 0; col <= inArray.GetUpperBound(1); col++)
+                {
+                    if (col == 99)
+                    {
+                        Line right_border = new Line() { StrokeThickness = 1, Stroke = Brushes.Black, HorizontalAlignment = HorizontalAlignment.Right };
+                        BindingOperations.SetBinding(right_border, Line.Y2Property, new Binding("ActualHeight") { RelativeSource = new RelativeSource(RelativeSourceMode.Self) });
+
+                        Grid.SetRow(right_border, 0);
+                        Grid.SetColumn(right_border, row - start_row);
+                        Grid.SetRowSpan(right_border, inArray.GetUpperBound(0) + 1);
+                        outer_grid.Children.Add(right_border);
+                    }
+                    TextBlock tb = new TextBlock() { HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center, Text = inArray[row, col] };
+                    Grid.SetRow(tb, row - start_row);
+                    Grid.SetColumn(tb, col);
+                    outer_grid.Children.Add(tb);
+                }
+            }
+
+            return outer_grid;
+        }
+
+        protected WebBrowser New_WebBrowser()
+        {
+            WebBrowser webBrowser = new WebBrowser() { VerticalAlignment = VerticalAlignment.Stretch, HorizontalAlignment = HorizontalAlignment.Stretch };
+            webBrowser.LoadCompleted += (s, nav_e) =>
+            {
+                string script = "document.body.style.whiteSpace = 'nowrap'";
+                WebBrowser wb = (WebBrowser)s;
+                wb.InvokeScript("execScript", new Object[] { script, "JavaScript" });
+            };
+
+            return webBrowser;
+        }
+
+        protected string Filter_String_For_WebBrowser(string inStr)
+        {
+            return inStr.Replace("–", "-").Replace("—", "--").Replace("×", "x");
+        }
+
+        protected string Character_Type_To_String(Char_Enum inCharType)
+        {
+            string rtn = "";
+            if (inCharType == Char_Enum.Friendly) { rtn = "Friendly"; }
+            else if (inCharType == Char_Enum.Hostile) { rtn = "Hostile"; }
+            else if (inCharType == Char_Enum.Summon) { rtn = "Summon"; }
+            else if (inCharType == Char_Enum.Unknown) { rtn = "Unknown"; }
+            else if (inCharType == Char_Enum.Really_Unknown) { rtn = "Really Unknown"; }
+            else rtn = "???";
+
+            return rtn;
+
         }
     }
 }
