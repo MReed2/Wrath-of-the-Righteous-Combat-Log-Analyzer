@@ -12,6 +12,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
     {
         private string _Type_Description = "";
 
+        private int _Event_Cnt = 0;
         private int _Attack_Cnt = 0;
         private int _Hit_Cnt = 0;
         private int _Critical_Threatened_Cnt = 0;
@@ -53,6 +54,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public string Type_Description { get => _Type_Description; set => _Type_Description = value; }
 
+        public int Event_Cnt { get => _Event_Cnt; }
         public int Attack_Cnt { get => _Attack_Cnt; }
         public int Hit_Cnt { get => _Hit_Cnt; }
         public int Critical_Threatened_Cnt { get => _Critical_Threatened_Cnt; }
@@ -93,6 +95,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public void Clear()
         {
+            _Event_Cnt = 0;
             _Attack_Cnt = 0;
             _Hit_Cnt = 0;
             _Critical_Threatened_Cnt = 0;
@@ -171,6 +174,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         public void Process_Event(CombatEvent inEvent)
         {
             _Tables_Stale = true;
+            _Event_Cnt++;
 
             if (inEvent is SimpleEvent) { }
             else

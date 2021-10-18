@@ -417,8 +417,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
         }
 
-        private WebBrowser _Details_webBrowser = null;
-
+        private DockPanel _Details_Dock_Panel = null;
+        
         private void OnClickForCharacterDetails(object sender, RoutedEventArgs e)
         {
             Hyperlink inHyperlink = (Hyperlink)sender;
@@ -442,7 +442,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             Grid.SetColumn(details_treeview, 0);
             grid.Children.Add(details_treeview);
 
-            TreeViewItem root_tvi = new TreeViewItem() { Header = itm_to_get_details_for.Friendly_Name, IsExpanded = true, Tag = null };
+            TreeViewItem root_tvi = new TreeViewItem() { Header = itm_to_get_details_for.Friendly_Name, IsExpanded = true, Tag = itm_to_get_details_for };
             root_tvi.Selected += Character_Details_TreeViewItem_Selected;
             details_treeview.Items.Add(root_tvi);
 
@@ -466,56 +466,36 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             Grid.SetColumnSpan(OK_btn, 2);
             grid.Children.Add(OK_btn);
 
-            DockPanel dockPanel = new DockPanel() { LastChildFill = true };
-            _Details_webBrowser = new WebBrowser() { VerticalAlignment = VerticalAlignment.Stretch, HorizontalAlignment = HorizontalAlignment.Stretch };
-            _Details_webBrowser.LoadCompleted += (s, nav_e) =>
-            {
-                string script = "document.body.style.whiteSpace = 'nowrap'";
-                WebBrowser wb = (WebBrowser)s;
-                wb.InvokeScript("execScript", new Object[] { script, "JavaScript" });
-            };
-            DockPanel.SetDock(_Details_webBrowser, Dock.Right);
-            dockPanel.Children.Add(_Details_webBrowser);
-
-            Grid.SetRow(dockPanel, 0);
-            Grid.SetColumn(dockPanel, 1);
-            grid.Children.Add(dockPanel);
+            _Details_Dock_Panel = new DockPanel() { LastChildFill = false };
+            Grid.SetRow(_Details_Dock_Panel, 0);
+            Grid.SetColumn(_Details_Dock_Panel, 1);
+            grid.Children.Add(_Details_Dock_Panel);
 
             Details_Window.ShowDialog();
         }
 
         private void Character_Details_TreeViewItem_Selected(object sender, RoutedEventArgs e)
         {
-            if (_Details_webBrowser == null) { throw new System.Exception("In Character_Details_TreeViewItem_Selected with null _Details_webBrowser."); }
-
             CharacterListItem itm_clicked = ((CharacterListItem)((TreeViewItem)sender).Tag);
 
-            System.Text.StringBuilder html_to_display = new StringBuilder();
-            if (itm_clicked == null)
-            {
-                foreach (TreeViewItem curr_tv_itm in ((TreeViewItem)sender).Items)
-                {
-                    CharacterListItem curr_lst = (CharacterListItem)curr_tv_itm.Tag;
+            if (e.Handled) { }
 
-                    CombatEventList tmp_ce_lst = curr_lst.Get_Combined_Parents();
-                    tmp_ce_lst.Sort(Comparer<CombatEvent>.Create((first, second) => first.ID.CompareTo(second.ID) ));
-                    foreach (CombatEvent curr_event in tmp_ce_lst)
-                    {
-                        html_to_display.Append(curr_event.Source_With_ID.Replace("–", "-").Replace("—", "--").Replace("×", "x"));
-                    }
-                }
+            _Details_Dock_Panel.Children.Clear();
+            if (itm_clicked.Source_Character_Name == ((TreeViewItem)sender).Header.ToString())
+            {
+                UserControl details_uc = itm_clicked.Get_UserControl_For_Display(false);
+                if (details_uc.Parent != null) { ((DockPanel)details_uc.Parent).Children.Remove(details_uc); }
+                DockPanel.SetDock(details_uc, Dock.Top);
+                _Details_Dock_Panel.Children.Add(details_uc);
             }
             else
             {
-                CombatEventList tmp_ce_lst = itm_clicked.Get_Combined_Parents();
-                tmp_ce_lst.Sort(Comparer<CombatEvent>.Create((first, second) => first.ID.CompareTo(second.ID)));
-                foreach (CombatEvent curr_event in tmp_ce_lst)
-                {
-                    html_to_display.Append(curr_event.Source_With_ID.Replace("–", "-").Replace("—", "--").Replace("×", "x"));
-                }
+                UserControl details_uc = itm_clicked.Get_UserControl_For_Display(true);
+                if (details_uc.Parent != null) { ((DockPanel)details_uc.Parent).Children.Remove(details_uc); }
+                DockPanel.SetDock(details_uc, Dock.Top);
+                _Details_Dock_Panel.Children.Add(details_uc);
             }
 
-            _Details_webBrowser.NavigateToString(html_to_display.ToString());
             e.Handled = true;
         }
 

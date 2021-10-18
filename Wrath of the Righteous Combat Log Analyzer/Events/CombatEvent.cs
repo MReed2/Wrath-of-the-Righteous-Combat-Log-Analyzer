@@ -159,7 +159,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             return rtn;
         }
 
-        protected ScrollViewer New_Windows_Table(string title, string[,] array_to_display, int num_of_columns = 1, int MinWidth = 0)
+        public ScrollViewer New_Windows_Table(string title, string[,] array_to_display, int num_of_columns = 1, int MinWidth = 0)
         {
             Grid outer_grid = new Grid();
             if (MinWidth != 0) outer_grid.MinWidth = MinWidth;
@@ -196,7 +196,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             return scrollViewer;
         }
 
-        protected Grid Create_A_Windows_Table(string[,] inArray, int start_row = 0, int end_row = int.MaxValue)
+        public Grid Create_A_Windows_Table(string[,] inArray, int start_row = 0, int end_row = int.MaxValue)
         {
             if (end_row > inArray.GetUpperBound(0)) { end_row = inArray.GetUpperBound(0); }
 
@@ -255,7 +255,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             return outer_grid;
         }
 
-        protected WebBrowser New_WebBrowser()
+        public WebBrowser New_WebBrowser()
         {
             WebBrowser webBrowser = new WebBrowser() { VerticalAlignment = VerticalAlignment.Stretch, HorizontalAlignment = HorizontalAlignment.Stretch };
             webBrowser.LoadCompleted += (s, nav_e) =>
@@ -268,7 +268,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             return webBrowser;
         }
 
-        protected int InsertGridRow(Grid inGrid, int new_row_indx)
+        public int InsertGridRow(Grid inGrid, int new_row_indx)
         {
             inGrid.RowDefinitions.Add(new RowDefinition() { Height = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto) });
             foreach (UIElement curr_child in inGrid.Children)
@@ -279,7 +279,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             return new_row_indx;
         }
 
-        protected string Filter_String_For_WebBrowser(string inStr)
+        public string Filter_String_For_WebBrowser(string inStr)
         {
             return inStr.Replace("–", "-").Replace("—", "--").Replace("×", "x");
         }

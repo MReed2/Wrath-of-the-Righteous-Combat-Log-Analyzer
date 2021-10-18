@@ -17,7 +17,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 {
     public class CombatStats
     {
-        // private StringBuilder _Rolls_CSV = new StringBuilder();
+        private int _Events_Cnt = 0;
 
         private Grid _Frequency_Analysis_WinGrid = null;
         private Grid _Streak_Analysis_WinGrid = null;
@@ -40,6 +40,11 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         public bool Tables_Stale
         {
             get { foreach (Stats_Instance curr_stat in _Stats_Categories) { if (curr_stat.Tables_Stale) { return true; } } return false; }
+        }
+
+        public int CombatEvent_Count
+        {
+            get => _Events_Cnt;
         }
 
         private List<Stats_Instance> _Stats_Categories = new List<Stats_Instance>();
@@ -238,6 +243,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public void Clear_Stats()
         {
+            _Events_Cnt = 0;
             _Stats_Categories.Clear();
 
             _Stats_Categories.Add(new Stats_Instance("All"));
@@ -274,6 +280,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public void Process_Event(CombatEvent inEvent)
         {
+            _Events_Cnt++;
+
             foreach (Stats_Instance curr_stat in _Stats_Categories)
             {
                 if (Qualifies_For_Category(inEvent, curr_stat)) { curr_stat.Process_Event(inEvent); }
