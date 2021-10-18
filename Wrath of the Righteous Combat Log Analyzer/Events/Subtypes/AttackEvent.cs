@@ -106,12 +106,12 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             get { return _Critical_Confirmation_Bonus;  }
         }
 
-        public bool Attack_Success
+        public bool IsHit
         {
             get { return _Attack_Success; }
         }
         
-        public bool Attack_Critical
+        public bool IsCritical
         {
             get { return _Attack_Critical; }
         }

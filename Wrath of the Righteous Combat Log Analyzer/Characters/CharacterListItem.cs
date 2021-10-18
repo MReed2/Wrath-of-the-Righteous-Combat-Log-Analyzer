@@ -19,11 +19,41 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         public virtual string Source_Character_Name { get => _Parent.Source_Character_Name; }
         public virtual string Character_Name { get => _Parent.Character_Name; set => _Parent.Character_Name = value; }
         public virtual string Friendly_Name { get => _Parent.Friendly_Name; set => _Parent.Friendly_Name = value; }
-        public virtual CombatEvent.Char_Enum Character_Type { get => _Parent.Character_Type; set => _Parent.Character_Type = value; }
+        public virtual CombatEvent.Char_Enum Character_Type
+        {
+            get => _Parent.Character_Type;
+            set => Set_Character_Type(value);
+        }
 
         public CombatEventList Parents { get => _Parents; }
         public CombatEvent Parent { get => _Parent; set => _Parent = value; }
         public CharacterList Children { get => _Children; }
+
+        public int Set_Character_Type(CombatEvent.Char_Enum in_Char_Type)
+        {
+            int changed_cnt = 0;
+
+            foreach (CombatEvent curr_event in Parents)
+            {
+                if (curr_event.Source_Character_Name == Source_Character_Name)
+                {
+                    if (curr_event.Character_Type != in_Char_Type) { changed_cnt++; curr_event.Character_Type = in_Char_Type; curr_event.Guess_Character_Type = in_Char_Type; }
+                }
+
+                if (curr_event is CombatEventTargeted)
+                {
+                    CombatEventTargeted curr_tgt_event = (CombatEventTargeted)curr_event;
+                    if (curr_tgt_event.Source_Target_Character_Name == Source_Character_Name)
+                    {
+                        if (curr_tgt_event.Target_Character_Type != in_Char_Type) { changed_cnt++; curr_tgt_event.Target_Character_Type = in_Char_Type; curr_tgt_event.Guess_Target_Character_Type = in_Char_Type;  }
+                    }
+                }
+            }
+
+            foreach (CharacterListItem curr_child in Children) { changed_cnt += curr_child.Set_Character_Type(in_Char_Type); }
+
+            return changed_cnt;
+        }
 
         public CombatEventList Get_Combined_Parents()
         {
@@ -49,7 +79,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             return rtn;
         }
 
-        public int Update_Smarter_Guesses_Character_Types(CharacterListItem inChar)
+        public int Vote_For_Role()
         {
             CombatEventList friendly_lst = new CombatEventList(); // These are lists instead of simple counters for troubleshooting
             CombatEventList hostile_lst = new CombatEventList();
@@ -62,13 +92,17 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             other_lst.Clear();
             changed_cnt=0;
 
-            foreach (CombatEvent curr_evnt_tmp in _Parents)
+            CombatEventList all_events = new CombatEventList();
+            all_events.AddRange(Parents);
+            foreach (CharacterListItem curr_child_char in Children) { all_events.AddRange(curr_child_char.Parents); }
+
+            foreach (CombatEvent curr_evnt_tmp in all_events)
             {
                 if (!(curr_evnt_tmp is CombatEventTargeted)) { continue; }
                 if (curr_evnt_tmp is DamageEvent) { continue; } // Ignore DamageEvents -- no conclusions as to friendly / hostile can be drawn from them
 
                 CombatEventTargeted curr_evnt = (CombatEventTargeted)curr_evnt_tmp;
-                if (curr_evnt.Source_Character_Name == inChar.Source_Character_Name)
+                if (curr_evnt.Friendly_Name == Friendly_Name)
                 {
                     // If X = the character we are interested in, these are events of the type "X <verb> Y".  X is the source of the event.
 
@@ -105,94 +139,99 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     }
                 }
             }
+
+            bool show_debug_lines = (Friendly_Name == "PlaguedSmilodonSummon");
+            if (show_debug_lines) { System.Diagnostics.Debug.WriteLine("---"); }
             
             if (other_lst.Count > (friendly_lst.Count + hostile_lst.Count))
             {
-                System.Diagnostics.Debug.WriteLine("\t{0} isn't classified due to too many 'Other' events ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
+                if (show_debug_lines) System.Diagnostics.Debug.WriteLine("\tVFR: {0} isn't classified due to too many 'Other' events ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
                 return 0;
             } // This shouldn't happen often, if ever, but if it does then the vote is inconclusive.
             else if (friendly_lst.Count > hostile_lst.Count)
             {
-                System.Diagnostics.Debug.WriteLine("\t{0} appears to be Friendly ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
-                changed_cnt = SetCharacterType(inChar, CombatEvent.Char_Enum.Friendly);
+                if (show_debug_lines) System.Diagnostics.Debug.WriteLine("\tVFR: {0} appears to be Friendly ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
+                changed_cnt = Set_Character_Type(CombatEvent.Char_Enum.Friendly);
             }
             else if (hostile_lst.Count > friendly_lst.Count)
             {
-                System.Diagnostics.Debug.WriteLine("\t{0} appears to be Hostile ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
-                changed_cnt = SetCharacterType(inChar, CombatEvent.Char_Enum.Hostile);
+                if (show_debug_lines) System.Diagnostics.Debug.WriteLine("\tVFR: {0} appears to be Hostile ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
+                changed_cnt = Set_Character_Type(CombatEvent.Char_Enum.Hostile);
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("\t{0} isn't classified due to a tie ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
+                if (show_debug_lines) System.Diagnostics.Debug.WriteLine("\tVFR: {0} isn't classified due to a tie ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, friendly_lst.Count, hostile_lst.Count, other_lst.Count);
             }
 
             //System.Diagnostics.Debug.WriteLine("Updated {0} combat events", changed_cnt);
 
             return changed_cnt;
         }
+        
+        //private int SetCharacterType(CharacterListItem inChar, CombatEvent.Char_Enum inType)
+        //{
+        //    int changed_cnt = 0;
+        //    CombatEvent.Char_Enum opp_Type = CombatEvent.Char_Enum.Really_Unknown;
 
-        private int SetCharacterType(CharacterListItem inChar, CombatEvent.Char_Enum inType)
-        {
-            int changed_cnt = 0;
-            CombatEvent.Char_Enum opp_Type = CombatEvent.Char_Enum.Really_Unknown;
+        //    if (inType == CombatEvent.Char_Enum.Friendly) { opp_Type = CombatEvent.Char_Enum.Hostile; }
+        //    else if (inType == CombatEvent.Char_Enum.Hostile) { opp_Type = CombatEvent.Char_Enum.Friendly; }
+        //    else { throw new System.Exception("SetCharacterType can only handle 'Friendly' and 'Hostile' char_enum types."); }
 
-            if (inType == CombatEvent.Char_Enum.Friendly) { opp_Type = CombatEvent.Char_Enum.Hostile; }
-            else if (inType == CombatEvent.Char_Enum.Hostile) { opp_Type = CombatEvent.Char_Enum.Friendly; }
-            else { throw new System.Exception("SetCharacterType can only handle 'Friendly' and 'Hostile' char_enum types."); }
+        //    inChar.Character_Type = inType;
 
-            foreach (CombatEvent curr_evnt in Parents)
-            {
-                if (curr_evnt is CombatEventTargeted)
-                {
-                    CombatEventTargeted tmp = (CombatEventTargeted)curr_evnt;
-                    if (tmp.Source_Character_Name == inChar.Source_Character_Name)
-                    {
-                        if (tmp.Character_Type != inType) { changed_cnt++; tmp.Character_Type = inType; }
+        //    foreach (CombatEvent curr_evnt in Parents)
+        //    {
+        //        if (curr_evnt is CombatEventTargeted)
+        //        {
+        //            CombatEventTargeted tmp = (CombatEventTargeted)curr_evnt;
+        //            if (tmp.Source_Character_Name == inChar.Source_Character_Name)
+        //            {
+        //                if (tmp.Character_Type != inType) { changed_cnt++; tmp.Character_Type = inType; }
 
-                        if (tmp is AttackEvent) { if (tmp.Target_Character_Type != opp_Type) { changed_cnt++; tmp.Target_Character_Type = opp_Type; } }
-                        else if (tmp is HealingEvent) { if (tmp.Target_Character_Type != inType) { changed_cnt++; tmp.Target_Character_Type = inType; } }
-                        else if (tmp is DamageEvent) { /* Do nothing */ }
-                        else { /* Do nothing */ }
-                    }
-                    else
-                    {
-                    }
-                }
-                else
-                {
-                    if (curr_evnt.Character_Type != inType) { changed_cnt++; curr_evnt.Character_Type = inType; }
-                }
-            }
+        //                if (tmp is AttackEvent) { if (tmp.Target_Character_Type != opp_Type) { changed_cnt++; tmp.Target_Character_Type = opp_Type; } }
+        //                else if (tmp is HealingEvent) { if (tmp.Target_Character_Type != inType) { changed_cnt++; tmp.Target_Character_Type = inType; } }
+        //                else if (tmp is DamageEvent) { /* Do nothing */ }
+        //                else { /* Do nothing */ }
+        //            }
+        //            else
+        //            {
+        //            }
+        //        }
+        //        else
+        //        {
+        //            if (curr_evnt.Character_Type != inType) { changed_cnt++; curr_evnt.Character_Type = inType; }
+        //        }
+        //    }
 
-            foreach (CharacterListItem curr_itm in Children)
-            {
-                foreach (CombatEvent inner_curr_evnt in curr_itm.Parents)
-                {
-                    if (inner_curr_evnt is CombatEventTargeted)
-                    {
-                        CombatEventTargeted tmp = (CombatEventTargeted)inner_curr_evnt;
-                        if (tmp.Source_Character_Name == inChar.Source_Character_Name)
-                        {
-                            if (tmp.Character_Type != inType) { changed_cnt++; tmp.Character_Type = inType; }
+        //    foreach (CharacterListItem curr_itm in Children)
+        //    {
+        //        foreach (CombatEvent inner_curr_evnt in curr_itm.Parents)
+        //        {
+        //            if (inner_curr_evnt is CombatEventTargeted)
+        //            {
+        //                CombatEventTargeted tmp = (CombatEventTargeted)inner_curr_evnt;
+        //                if (tmp.Source_Character_Name == inChar.Source_Character_Name)
+        //                {
+        //                    if (tmp.Character_Type != inType) { changed_cnt++; tmp.Character_Type = inType; }
 
-                            if (tmp is AttackEvent) { if (tmp.Target_Character_Type != opp_Type) { changed_cnt++; tmp.Target_Character_Type = opp_Type; } }
-                            else if (tmp is HealingEvent) { if (tmp.Target_Character_Type != inType) { changed_cnt++; tmp.Target_Character_Type = inType; } }
-                            else if (tmp is DamageEvent) { /* Do nothing */ }
-                            else { /* Do nothing */ }
-                        }
-                        else
-                        {
-                        }
-                    }
-                    else
-                    {
-                        if (inner_curr_evnt.Character_Type != inType) { changed_cnt++; inner_curr_evnt.Character_Type = inType; }
-                    }
-                }
-            }
+        //                    if (tmp is AttackEvent) { if (tmp.Target_Character_Type != opp_Type) { changed_cnt++; tmp.Target_Character_Type = opp_Type; } }
+        //                    else if (tmp is HealingEvent) { if (tmp.Target_Character_Type != inType) { changed_cnt++; tmp.Target_Character_Type = inType; } }
+        //                    else if (tmp is DamageEvent) { /* Do nothing */ }
+        //                    else { /* Do nothing */ }
+        //                }
+        //                else
+        //                {
+        //                }
+        //            }
+        //            else
+        //            {
+        //                if (inner_curr_evnt.Character_Type != inType) { changed_cnt++; inner_curr_evnt.Character_Type = inType; }
+        //            }
+        //        }
+        //    }
 
-            return changed_cnt;
-        }
+        //    return changed_cnt;
+        //}
 
         public CharacterListItem(CombatEvent inParent)
         {

@@ -26,8 +26,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         private string _Source = "";
         private int _ID = -1;
-        private Char_Enum _Character_Type = Char_Enum.Really_Unknown;
-        private Char_Enum _Smarter_Guess_Character_Type = Char_Enum.Really_Unknown;
+        protected Char_Enum _Character_Type = Char_Enum.Really_Unknown;
+        protected Char_Enum _Smarter_Guess_Character_Type = Char_Enum.Really_Unknown;
         private string _Friendly_Name = "";
         private CombatEventList _Children = new CombatEventList();
         private int _Cached_Source_Hashcode = 0;
@@ -68,7 +68,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
         }
 
-        public Char_Enum Smarter_Guess_Character_Type
+        public Char_Enum Guess_Character_Type
         {
             get => _Smarter_Guess_Character_Type;
             set
@@ -94,9 +94,14 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             else { return Char_Enum.Hostile; }
         }
 
-        protected bool Obviously_Hostile(string inStr)
+        protected bool Likely_Hostile(string inStr)
         {
             return (Regex.Match(inStr, @".*?CR(\d*?)_.*").Success); // Looking for "...CR###_..."  -- not all hostiles use this format, but most do.
+        }
+
+        protected bool Obviously_Friendly(string inStr)
+        {
+            return (inStr.Contains("Companion") || (inStr.Contains("Player_Unit")));
         }
 
         public string Friendly_Name
@@ -173,6 +178,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
 
             int num_items_per_col = (array_to_display.GetUpperBound(0)+1) / num_of_columns;
+            if ( ((array_to_display.GetUpperBound(0) + 1) % num_of_columns) != 0) { num_items_per_col++; }
 
             outer_grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(0, GridUnitType.Auto) });
 
@@ -260,6 +266,17 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             };
 
             return webBrowser;
+        }
+
+        protected int InsertGridRow(Grid inGrid, int new_row_indx)
+        {
+            inGrid.RowDefinitions.Add(new RowDefinition() { Height = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto) });
+            foreach (UIElement curr_child in inGrid.Children)
+            {
+                if (Grid.GetRow(curr_child) >= new_row_indx) { Grid.SetRow(curr_child, Grid.GetRow(curr_child) + 1); }
+            }
+
+            return new_row_indx;
         }
 
         protected string Filter_String_For_WebBrowser(string inStr)

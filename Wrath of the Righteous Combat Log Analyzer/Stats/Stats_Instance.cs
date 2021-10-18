@@ -190,11 +190,11 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 // Track misc stuff
 
                 _Attack_Cnt++;
-                if (atk.Attack_Success) { _Hit_Cnt++; }
+                if (atk.IsHit) { _Hit_Cnt++; }
                 if (atk.Critical_Confirmation_Rolls.Count > 0)
                 {
                     _Critical_Threatened_Cnt++;
-                    if (atk.Attack_Critical)
+                    if (atk.IsCritical)
                     {
                         _Critical_Confirmed_Cnt++;
 

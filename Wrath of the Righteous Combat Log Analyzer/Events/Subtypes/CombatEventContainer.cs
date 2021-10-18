@@ -19,6 +19,25 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         public override string Character_Name { get => _Filename; set => throw new NotImplementedException(); }
         public override string Source_Character_Name => throw new NotImplementedException();
         public override List<Die_Roll> Die_Rolls => throw new System.NotImplementedException();
+        public override string Source
+        {
+            get
+            {
+                StringBuilder tmp = new StringBuilder(base.Source);
+                foreach (CombatEvent curr_evnt in Children) { tmp.Append("\n" + curr_evnt.Source); }
+                return tmp.ToString();
+            }
+            set => base.Source = value;
+        }
+        public override string Source_With_ID
+        {
+            get
+            {
+                StringBuilder tmp = new StringBuilder(base.Source_With_ID);
+                foreach (CombatEvent curr_evnt in Children) { tmp.Append("\n" + curr_evnt.Source_With_ID); }
+                return tmp.ToString();
+            }
+        }
         #endregion
         #region Override Methods
         public override List<Die_Roll> Parse(string line) { _Filename = line; return null; }
@@ -64,7 +83,15 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
         }
 
-        public void Update_Smarter_Guesses_Character_Types()
+        private string Current_Character_Factions_To_String()
+        {
+            string rtn = "";
+            foreach (CharacterListItem curr_itm in _Characters) { rtn += string.Format("{0} = {1}, ", curr_itm.Source_Character_Name, curr_itm.Character_Type); }
+            if (rtn != "") { rtn = rtn.Substring(0, rtn.Length - 2); }
+            return rtn;
+        }
+
+        public void Vote_For_Role()
         {
             int changed_cnt = 0;
             int loop_cnt = 0;
@@ -74,11 +101,12 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 //System.Diagnostics.Debug.WriteLine("Loop Cnt = {0}", loop_cnt);
                 changed_cnt = 0;
                 loop_cnt++;
-                if (loop_cnt > 5) { throw new System.Exception("Stuck in a loop"); }
+                if (loop_cnt > 5) { System.Diagnostics.Debug.WriteLine(Current_Character_Factions_To_String()); }
+                if (loop_cnt > 10) { throw new System.Exception("Stuck in a loop"); }
                 foreach (CharacterListItem curr_char in Characters)
                 {
                     //System.Diagnostics.Debug.WriteLine("Checking {0}", curr_char.Source_Character_Name);
-                    changed_cnt += curr_char.Update_Smarter_Guesses_Character_Types(curr_char);
+                    changed_cnt += curr_char.Vote_For_Role();
                 }
                 // System.Diagnostics.Debug.WriteLine("changed_cnt = {0}", changed_cnt);
             } while ((changed_cnt > 0));
@@ -88,39 +116,40 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         protected void Update_Characters_List()
         {
+            if ((_Children_Count_When_Characters_Last_Refreshed != Children.Count)||(_Children_Changed)) { Force_Update_Characters_List(); }
+        }
+
+        protected void Force_Update_Characters_List()
+        {
             // *Don't* clear the _Characters list!
             //
             // Any overrides the users has applied should still be valid -- we just need to add more items to the list, or update it with changes from elsewhere
 
             _Updating_Characters_List = true; // Suppress change notifications while the update is performed.
 
-            if ((_Children_Count_When_Characters_Last_Refreshed != Children.Count)||(_Children_Changed))
+            System.Diagnostics.Debug.WriteLine("Entering Update_Characters_List() {0}, {1} Events", System.DateTime.Now, Children.Count);
+
+            foreach (CombatEvent curr_event in Children)
             {
-                System.Diagnostics.Debug.WriteLine("Entering Update_Characters_List() {0}", System.DateTime.Now);
-
-                //Parallel.ForEach(Children, (curr_event) =>  Can't do this in parallel, because the contents of the collection change in the loop.
-                foreach (CombatEvent curr_event in Children)
+                if (curr_event is CombatStartEvent) { }
+                else if ((curr_event is SimpleEvent) && (((SimpleEvent)curr_event).Subtype != "Death")) { }
+                else
                 {
-                    if (curr_event is CombatStartEvent) { }
-                    else if ((curr_event is SimpleEvent) && (((SimpleEvent)curr_event).Subtype != "Death")) { }
-                    else
-                    {
-                        _Characters.Add(new CharacterListItem(curr_event));
-                        // This line *DOES* do something new -- it adds the /target/ of the event to the characters list, if it isn't a duplicate.
-                        if (curr_event is CombatEventTargeted) { _Characters.Add(new TargetedCharacterListItem((CombatEventTargeted)curr_event)); }
-                    } // CharacterListItem and CharacterList manage duplicate entries -- no need to do so here
-                }//);
-
-                Update_Smarter_Guesses_Character_Types();
-
-                _Children_Count_When_Characters_Last_Refreshed = Children.Count;
-                _Children_Changed = false;
-                _Has_Rendered_Character_UC_After_Refresh = false; // Need to rebuild the control.
-                _Has_Rendered_Stats_UC_After_Refresh = false; // Stats also need to be rebuilt.
-                _Updating_Characters_List = false; // Reenable change notifications.
-
-                System.Diagnostics.Debug.WriteLine("Exiting Update_Characters_List() {0}", System.DateTime.Now);
+                    _Characters.Add(new CharacterListItem(curr_event));
+                    // This line *DOES* do something new -- it adds the /target/ of the event to the characters list, if it isn't a duplicate.
+                    if (curr_event is CombatEventTargeted) { _Characters.Add(new TargetedCharacterListItem((CombatEventTargeted)curr_event)); }
+                } // CharacterListItem and CharacterList manage duplicate entries -- no need to do so here
             }
+
+            Vote_For_Role();
+
+            _Children_Count_When_Characters_Last_Refreshed = Children.Count;
+            _Children_Changed = false;
+            _Has_Rendered_Character_UC_After_Refresh = false; // Need to rebuild the control.
+            _Has_Rendered_Stats_UC_After_Refresh = false; // Stats also need to be rebuilt.
+            _Updating_Characters_List = false; // Reenable change notifications.
+
+            System.Diagnostics.Debug.WriteLine("Exiting Update_Characters_List() {0}", System.DateTime.Now);
         }
 
         private UserControl Get_UserControl_For_Characters()
@@ -680,6 +709,45 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
                 _Stats_Panel.Children.Clear();
                 _Stats_Panel.Children.Add(_Stats.Get_Analysis_UserControl());
+
+                grid.RowDefinitions.Add(new RowDefinition() { Height = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto) });
+                TextBlock source_title = new TextBlock() { HorizontalAlignment = System.Windows.HorizontalAlignment.Center };
+                source_title.Inlines.Add(new System.Windows.Documents.Run("Source") { FontWeight = System.Windows.FontWeights.Bold, TextDecorations = System.Windows.TextDecorations.Underline });
+                Grid.SetRow(source_title, grid.RowDefinitions.Count - 1);
+                Grid.SetColumn(source_title, 0);
+                Grid.SetColumnSpan(source_title, 2);
+                grid.Children.Add(source_title);
+
+                WebBrowser webBrowser = New_WebBrowser();
+
+                grid.RowDefinitions.Add(new RowDefinition() { Height = new System.Windows.GridLength(800, System.Windows.GridUnitType.Pixel) });
+                Grid.SetRow(webBrowser, grid.RowDefinitions.Count - 1);
+                Grid.SetColumn(webBrowser, 0);
+                Grid.SetColumnSpan(webBrowser, 2);
+                grid.Children.Add(webBrowser);
+
+                Button refresh_button = new Button() { Content = new TextBlock(new Run("Refresh")), Width = 100, HorizontalAlignment = HorizontalAlignment.Right };
+                refresh_button.Click += 
+                    (sender, obj) =>
+                    {
+                        refresh_button.IsEnabled = false;
+                        webBrowser.NavigateToString(string.Format("Loading {0} events -- please be patient", Children.Count));
+                        string tmp_string = "";
+
+                        System.ComponentModel.BackgroundWorker bg = new System.ComponentModel.BackgroundWorker();
+                        bg.DoWork += (bg_sender, bg_obj) => tmp_string = Filter_String_For_WebBrowser(Source_With_ID);
+                        bg.RunWorkerCompleted += (bg_sender, bg_obj) => { webBrowser.NavigateToString(tmp_string); refresh_button.IsEnabled = true; };
+                        bg.RunWorkerAsync();
+                    };
+                Grid.SetRow(refresh_button, grid.RowDefinitions.Count - 2); // Backup to the "Source" title row.
+                Grid.SetColumn(refresh_button, 0);
+                Grid.SetColumnSpan(refresh_button, 2);
+                grid.Children.Add(refresh_button);
+
+                if (Children.Count < 1000) { webBrowser.NavigateToString(Filter_String_For_WebBrowser(Source_With_ID)); }
+                else { webBrowser.NavigateToString(string.Format("Refresh to view {0} events -- this may take a while to generate!", Children.Count)); }
+
+
             }
 
             return _UC_For_Display;

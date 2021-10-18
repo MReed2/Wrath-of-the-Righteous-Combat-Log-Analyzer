@@ -273,7 +273,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                                         System.Diagnostics.Debug.WriteLine("Start of new combat");
                                         if (_Prev_Start_Of_Combat != null)
                                         {
-                                            _Curr_Start_Of_Combat.Update_Smarter_Guesses_Character_Types();
+                                            _Curr_Start_Of_Combat.Vote_For_Role();
                                             _Curr_Start_Of_Combat.Update_Reload(_Prev_Start_Of_Combat);
                                         }
 
