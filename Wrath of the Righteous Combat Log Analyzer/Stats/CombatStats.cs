@@ -74,6 +74,20 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 outer_grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto) });
                 outer_grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new System.Windows.GridLength(100, System.Windows.GridUnitType.Auto) });
 
+                Button Export_Raw_Data_To_Excel_CSV = new Button()
+                {
+                    Content = new TextBlock(new Run("Copy raw data to clipboard (Tab deliminated, ready to paste to Excel)")),
+                    Margin = new Thickness(0, 5, 0, 5)
+                };
+                Export_Raw_Data_To_Excel_CSV.Click += Export_Raw_Data_To_Excel_CSV_Click;
+                Export_Raw_Data_To_Excel_CSV.HorizontalAlignment = HorizontalAlignment.Stretch;
+
+                outer_grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(0, GridUnitType.Auto) });
+                Grid.SetRow(Export_Raw_Data_To_Excel_CSV, outer_grid.RowDefinitions.Count - 1);
+                Grid.SetColumn(Export_Raw_Data_To_Excel_CSV, 0);
+                Grid.SetColumnSpan(Export_Raw_Data_To_Excel_CSV, 2);
+                outer_grid.Children.Add(Export_Raw_Data_To_Excel_CSV);
+
                 _Misc_WinGrid = Add_Windows_Table(
                     outer_grid, 
                     "Miscellaneous Statistics", 
@@ -116,26 +130,45 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             return _Analysis_UserControl;
         }
 
+        private void Export_Raw_Data_To_Excel_CSV_Click(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText(Rolls_CSV.ToString().Replace(",", "\t"));
+        }
+
         private Grid Add_Windows_Table(Grid outer_grid, string title, string[,] array_to_display)
         {
             outer_grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(0, GridUnitType.Auto) });
-            TextBlock title_tb = new TextBlock() { HorizontalAlignment = HorizontalAlignment.Center };
+            TextBlock title_tb = new TextBlock() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
             title_tb.Inlines.Add(new Run(title) { FontWeight = FontWeights.Bold, TextDecorations = TextDecorations.Underline });
             Grid.SetRow(title_tb, outer_grid.RowDefinitions.Count - 1);
             Grid.SetColumn(title_tb, 0);
             Grid.SetColumnSpan(title_tb, 2);
             outer_grid.Children.Add(title_tb);
 
-            Button Copy_To_Clipboard_Button = new Button()
+            TextBlock btn_TextBlock = new TextBlock() { HorizontalAlignment = HorizontalAlignment.Right };
+            Grid.SetRow(btn_TextBlock, outer_grid.RowDefinitions.Count - 1);
+            Grid.SetColumn(btn_TextBlock, 1);
+            outer_grid.Children.Add(btn_TextBlock);
+
+            Button Copy_To_Clipboard_Button_Steam = new Button()
             {
-                Width = 100,
+                Width = 150,
                 HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 5, 5, 5),
                 Content = new TextBlock() { Text = "Steam" }
             };
-            Copy_To_Clipboard_Button.Click += Copy_To_Steam_Clipboard_Button_Click;
-            Grid.SetRow(Copy_To_Clipboard_Button, outer_grid.RowDefinitions.Count - 1);
-            Grid.SetColumn(Copy_To_Clipboard_Button, 1);
-            outer_grid.Children.Add(Copy_To_Clipboard_Button);
+            Copy_To_Clipboard_Button_Steam.Click += Copy_To_Steam_Clipboard_Button_Click;
+            btn_TextBlock.Inlines.Add(Copy_To_Clipboard_Button_Steam);
+
+            Button Copy_To_Clipboard_Button_CSV = new Button()
+            {
+                Width = 150,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 5, 0, 5),
+                Content = new TextBlock() { Text = "Excel (Tab Seperated)" }
+            };
+            Copy_To_Clipboard_Button_CSV.Click += Copy_To_CSV_Clipboard_Button_Click;
+            btn_TextBlock.Inlines.Add(Copy_To_Clipboard_Button_CSV);
 
             outer_grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(0, GridUnitType.Auto) });
             Grid new_win_grid = Create_A_Windows_Table(array_to_display);
@@ -144,7 +177,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             Grid.SetColumnSpan(new_win_grid, 2);
             outer_grid.Children.Add(new_win_grid);
 
-            Copy_To_Clipboard_Button.Tag = new_win_grid;
+            Copy_To_Clipboard_Button_Steam.Tag = new_win_grid;
+            Copy_To_Clipboard_Button_CSV.Tag = new_win_grid;
 
             return new_win_grid;
         }
@@ -154,6 +188,14 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             Button tmp = sender as Button;
             Grid grd = tmp.Tag as Grid;
             string str = Windows_Grid_To_Steam_Table(grd);
+            Clipboard.SetText(str);
+        }
+
+        private void Copy_To_CSV_Clipboard_Button_Click(object sender, RoutedEventArgs e)
+        {
+            Button tmp = sender as Button;
+            Grid grd = tmp.Tag as Grid;
+            string str = Windows_Grid_To_CSV_Table(grd);
             Clipboard.SetText(str);
         }
 
@@ -437,13 +479,30 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             return str.ToString();
         }
 
-        public string Windows_Grid_To_Steam_Table(Grid inGrid)
+        private string String_Array_To_CSV_Table(string[,] inArray)
         {
-            string[,] tmp_array = new string[inGrid.RowDefinitions.Count, inGrid.ColumnDefinitions.Count-1];
+            StringBuilder str = new StringBuilder("");
 
-            for (int x=0;x<=tmp_array.GetUpperBound(0); x++)
+            for (int x = 0; x <= inArray.GetUpperBound(0); x++)
             {
-                for (int y=0;y<=tmp_array.GetUpperBound(1);y++)
+                for (int y = 0; y <= inArray.GetUpperBound(1); y++)
+                {
+                    str.Append(inArray[x, y].Replace("\n", "")+"\t");
+                }
+                str.Remove(str.Length - 1, 1);
+                str.Append("\n");
+            }
+
+            return str.ToString();
+        }
+
+        private string[,] Windows_Grid_To_String_Array(Grid inGrid)
+        {
+            string[,] tmp_array = new string[inGrid.RowDefinitions.Count, inGrid.ColumnDefinitions.Count - 1];
+
+            for (int x = 0; x <= tmp_array.GetUpperBound(0); x++)
+            {
+                for (int y = 0; y <= tmp_array.GetUpperBound(1); y++)
                 {
                     tmp_array[x, y] = "";
                 }
@@ -457,7 +516,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     int curr_col = Grid.GetColumn(curr_elem);
                     TextBlock curr_tb = ((TextBlock)curr_elem);
 
-                    if ((curr_tb.Tag is string) && ( ((string)curr_tb.Tag) == "Tick"))
+                    if ((curr_tb.Tag is string) && (((string)curr_tb.Tag) == "Tick"))
                     { }
                     else
                     {
@@ -469,14 +528,25 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                         {
                             foreach (Run curr_run in ((TextBlock)curr_elem).Inlines)
                             {
-                                tmp_array[curr_row, curr_col] += curr_run.Text.Trim();
+                                tmp_array[curr_row, curr_col] += curr_run.Text;
                             }
+                            tmp_array[curr_row, curr_col] = tmp_array[curr_row, curr_col].Trim();
                         }
                     }
                 }
             }
 
-            return String_Array_To_Steam_Table(tmp_array);
+            return tmp_array;
+        }
+
+        public string Windows_Grid_To_Steam_Table(Grid inGrid)
+        {
+            return String_Array_To_Steam_Table(Windows_Grid_To_String_Array(inGrid));
+        }
+
+        public string Windows_Grid_To_CSV_Table(Grid inGrid)
+        {
+            return String_Array_To_CSV_Table(Windows_Grid_To_String_Array(inGrid));
         }
 
         private Grid Create_A_Windows_Table(string[,] inArray)

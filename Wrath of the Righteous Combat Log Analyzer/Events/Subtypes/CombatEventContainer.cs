@@ -19,6 +19,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         public override string Character_Name { get => _Filename; set => throw new NotImplementedException(); }
         public override string Source_Character_Name => throw new NotImplementedException();
         public override List<Die_Roll> Die_Rolls => throw new System.NotImplementedException();
+
         public override string Source
         {
             get
@@ -35,6 +36,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
             set => base.Source = value;
         }
+
         public override string Source_With_ID
         {
             get
@@ -203,7 +205,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             _Has_Rendered_Character_UC_After_Refresh = true;
 
-            // Grid grid = ((Grid)((DockPanel)((ScrollViewer)tmp_UC.Content).Content).Children[0]);
             Grid grid = ((Grid)((DockPanel)tmp_UC.Content).Children[0]);
             grid.Children.Clear();
             grid.RowDefinitions.Clear();
@@ -438,14 +439,14 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             Window Details_Window = new Window()
             {
-                Height = 500,
-                Width = 825,
+                Height = 750,
+                Width = 1250,
                 Title = "Character details for " + itm_to_get_details_for.Friendly_Name
             };
             Grid grid = new Grid();
             Details_Window.Content = grid;
 
-            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(20, GridUnitType.Star) }); // 300
+            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(10, GridUnitType.Star) }); // 300
             grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(50, GridUnitType.Star) }); // 500
 
             grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Star) });
@@ -482,6 +483,9 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             Grid.SetRow(_Details_Dock_Panel, 0);
             Grid.SetColumn(_Details_Dock_Panel, 1);
             grid.Children.Add(_Details_Dock_Panel);
+
+            root_tvi.IsSelected = true;
+            details_treeview.Focus();
 
             Details_Window.ShowDialog();
         }
@@ -523,7 +527,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 else if (curr_itm.Character_Type == Char_Enum.Hostile) { comboBox.SelectedIndex = 1; }
                 else if (curr_itm.Character_Type == Char_Enum.Summon) { comboBox.SelectedIndex = 2; }
                 else if (curr_itm.Character_Type == Char_Enum.Unknown) { comboBox.SelectedIndex = 3; }
-                else { throw new System.Exception("Unexpected value in CreateTypeSElectionComboBoxes"); }
+                else { throw new System.Exception("Unexpected value in CreateTypeSelectionComboBoxes"); }
 
                 Grid.SetRow(comboBox, row);
                 Grid.SetColumn(comboBox, inCol);
@@ -674,13 +678,21 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new System.Windows.GridLength(0, System.Windows.GridUnitType.Star) });
                 grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new System.Windows.GridLength(50, System.Windows.GridUnitType.Star) });
 
+                grid.RowDefinitions.Add(new RowDefinition() { Height = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto) });
+                TextBlock char_title = new TextBlock() { HorizontalAlignment = System.Windows.HorizontalAlignment.Center };
+                char_title.Inlines.Add(new System.Windows.Documents.Run("Characters") { FontWeight = System.Windows.FontWeights.Bold, TextDecorations = System.Windows.TextDecorations.Underline });
+                Grid.SetRow(char_title, grid.RowDefinitions.Count - 1);
+                Grid.SetColumn(char_title, 0);
+                Grid.SetColumnSpan(char_title, 2);
+                grid.Children.Add(char_title);
+
                 grid.RowDefinitions.Add(new RowDefinition());
 
                 if (_Character_List_Panel == null)
                 {
                     _Character_List_Panel = new StackPanel() { Margin = new System.Windows.Thickness(5, 5, 0, 10) };
                 }
-                Grid.SetRow(_Character_List_Panel, 0);
+                Grid.SetRow(_Character_List_Panel, grid.RowDefinitions.Count - 1);
                 Grid.SetColumn(_Character_List_Panel, 0);
                 Grid.SetColumnSpan(_Character_List_Panel, 2);
                 grid.Children.Add(_Character_List_Panel);
@@ -688,13 +700,21 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 _Character_List_Panel.Children.Clear();
                 _Character_List_Panel.Children.Add(Get_UserControl_For_Characters());
 
+                grid.RowDefinitions.Add(new RowDefinition() { Height = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto) });
+                TextBlock stats_title = new TextBlock() { HorizontalAlignment = System.Windows.HorizontalAlignment.Center };
+                stats_title.Inlines.Add(new System.Windows.Documents.Run("Statstics") { FontWeight = System.Windows.FontWeights.Bold, TextDecorations = System.Windows.TextDecorations.Underline });
+                Grid.SetRow(stats_title, grid.RowDefinitions.Count - 1);
+                Grid.SetColumn(stats_title, 0);
+                Grid.SetColumnSpan(stats_title, 2);
+                grid.Children.Add(stats_title);
+
                 grid.RowDefinitions.Add(new RowDefinition());
 
                 if (_Stats_Panel == null)
                 {
-                    _Stats_Panel = new StackPanel() { Margin = new System.Windows.Thickness(5, 5, 0, 10) };
+                    _Stats_Panel = new StackPanel();
                 }
-                Grid.SetRow(_Stats_Panel, 1);
+                Grid.SetRow(_Stats_Panel, grid.RowDefinitions.Count - 1);
                 Grid.SetColumn(_Stats_Panel, 0);
                 Grid.SetColumnSpan(_Stats_Panel, 2);
                 grid.Children.Add(_Stats_Panel);

@@ -22,6 +22,9 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private int _Exp_Earned = 0;
         private List<string> _Kills = new List<string>();
 
+        private List<int> _Attack_Need_To_Roll_Lst = new List<int>();
+        private List<int> _Critical_Confirmation_To_Roll_Lst = new List<int>();
+
         private int _Critical_Threatned_20_Confirmed_20_Cnt = 0;
         private int _Not_Critical_Threatned_20_Confirmed_20_Cnt = 0;
 
@@ -43,7 +46,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private string[,] _Streak_Length_Analysis = new string[21, 11];
         private string[,] _Attack_Margin_Analysis = new string[43, 2];
         private string[,] _Crit_Confirmation_Margin_Analysis = new string[43, 2];
-        private string[,] _Misc_Analysis = new string[11, 2]; // Simple "x = y" type stuff goes here.  There are extra rows, which won't be displayed in the wingrid
+        private string[,] _Misc_Analysis = new string[15, 2]; // Simple "x = y" type stuff goes here.  There are extra rows, which won't be displayed in the wingrid
 
         private StringBuilder _Rolls_CSV = new StringBuilder();
 
@@ -56,6 +59,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public int Event_Cnt { get => _Event_Cnt; }
         public int Attack_Cnt { get => _Attack_Cnt; }
+        public List<int> Attack_Need_To_Roll_List { get => _Attack_Need_To_Roll_Lst; }
+        public List<int> Critical_Confirmation_To_Roll_List { get => _Critical_Confirmation_To_Roll_Lst; }
         public int Hit_Cnt { get => _Hit_Cnt; }
         public int Critical_Threatened_Cnt { get => _Critical_Threatened_Cnt; }
         public int Critical_Confirmed_Cnt { get => _Critical_Confirmed_Cnt; }
@@ -104,6 +109,9 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             _Number_Killed = 0;
             _Exp_Earned = 0;
             _Kills = new List<string>();
+
+            _Attack_Need_To_Roll_Lst.Clear();
+            _Critical_Confirmation_To_Roll_Lst.Clear();
 
             _Critical_Threatned_20_Confirmed_20_Cnt = 0;
             _Not_Critical_Threatned_20_Confirmed_20_Cnt = 0;
@@ -194,6 +202,24 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 // Track misc stuff
 
                 _Attack_Cnt++;
+                foreach (Die_Roll curr_roll in atk.Attack_Die_Rolls)
+                {
+                    if (curr_roll.Target != -999)
+                    {
+                        if (curr_roll.Target < 1) { _Attack_Need_To_Roll_Lst.Add(1); }
+                        else if (curr_roll.Target > 20) { _Attack_Need_To_Roll_Lst.Add(20); }
+                        else { _Attack_Need_To_Roll_Lst.Add(curr_roll.Target); }
+                    }
+                }
+                foreach (Die_Roll curr_roll in atk.Critical_Confirmation_Rolls)
+                {
+                    if (curr_roll.Target != -999)
+                    {
+                        if (curr_roll.Target < 1) { _Critical_Confirmation_To_Roll_Lst.Add(1); }
+                        else if (curr_roll.Target > 20) { _Critical_Confirmation_To_Roll_Lst.Add(20); }
+                        else { _Critical_Confirmation_To_Roll_Lst.Add(curr_roll.Target); }
+                    }
+                }
                 if (atk.IsHit) { _Hit_Cnt++; }
                 if (atk.Critical_Confirmation_Rolls.Count > 0)
                 {
@@ -284,15 +310,17 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             _Misc_Analysis[0, 0] = "Name"; Misc_Analysis[0, 1] = "*_*";
             _Misc_Analysis[1, 0] = "Attack Count"; _Misc_Analysis[1, 1] = _Attack_Cnt.ToString();
-            _Misc_Analysis[2, 0] = "Hit Count"; _Misc_Analysis[2, 1] = _Hit_Cnt.ToString();
-            _Misc_Analysis[3, 0] = "Critical Threatened"; _Misc_Analysis[3, 1] = _Critical_Threatened_Cnt.ToString();
-            _Misc_Analysis[4, 0] = "Critical Confirmed"; _Misc_Analysis[4, 1] = _Critical_Confirmed_Cnt.ToString();
-            _Misc_Analysis[5, 0] = "Kill Count"; _Misc_Analysis[5, 1] = _Number_Killed.ToString();
-            _Misc_Analysis[6, 0] = "Exp Earned"; _Misc_Analysis[6, 1] = _Exp_Earned.ToString();
-            _Misc_Analysis[7, 0] = "Damage Inflicted"; _Misc_Analysis[7, 1] = _Damage_Done_Total.ToString();
-            _Misc_Analysis[8, 0] = "-------------------"; _Misc_Analysis[8, 1] = "----";
-            _Misc_Analysis[9, 0] = "Critical Threatened On 20, Confirmed On 20"; _Misc_Analysis[9, 1] = _Critical_Threatned_20_Confirmed_20_Cnt.ToString();
-            _Misc_Analysis[10, 0] = "Critical Threatened On 20, NOT confirmed on 20"; _Misc_Analysis[10, 1] = _Not_Critical_Threatned_20_Confirmed_20_Cnt.ToString();
+            _Misc_Analysis[2, 0] = "Avg. need to roll to Hit"; _Misc_Analysis[2, 1] = string.Format("{0:F}", ((float)_Attack_Need_To_Roll_Lst.Sum()) / ((float)(_Attack_Need_To_Roll_Lst.Count)));
+            _Misc_Analysis[3, 0] = "Hit Count"; _Misc_Analysis[3, 1] = string.Format("{0} ({1:P})", _Hit_Cnt, ((float)_Hit_Cnt) / ((float)_Attack_Cnt));
+            _Misc_Analysis[4, 0] = "Critical Threatened"; _Misc_Analysis[4, 1] = string.Format("{0} ({1:P})", _Critical_Threatened_Cnt, ((float)_Critical_Threatened_Cnt) / ((float)_Hit_Cnt));
+            _Misc_Analysis[5, 0] = "Avg. need to roll to confirm"; _Misc_Analysis[5, 1] = string.Format("{0:F}", ((float)_Critical_Confirmation_To_Roll_Lst.Sum()) / ((float)_Critical_Confirmation_To_Roll_Lst.Count));
+            _Misc_Analysis[6, 0] = "Critical Confirmed"; _Misc_Analysis[6, 1] = string.Format("{0} ({1:P})", _Critical_Confirmed_Cnt, ((float)_Critical_Confirmed_Cnt) / ((float)_Critical_Threatened_Cnt));
+            _Misc_Analysis[7, 0] = "Kill Count"; _Misc_Analysis[7, 1] = _Number_Killed.ToString();
+            _Misc_Analysis[8, 0] = "Exp Earned"; _Misc_Analysis[8, 1] = _Exp_Earned.ToString();
+            _Misc_Analysis[9, 0] = "Damage Inflicted"; _Misc_Analysis[9, 1] = _Damage_Done_Total.ToString();
+            _Misc_Analysis[10, 0] = "-------------------"; _Misc_Analysis[10, 1] = "----";
+            _Misc_Analysis[11, 0] = "Critical Threatened On 20, Confirmed On 20"; _Misc_Analysis[11, 1] = _Critical_Threatned_20_Confirmed_20_Cnt.ToString();
+            _Misc_Analysis[12, 0] = "Critical Threatened On 20, NOT confirmed on 20"; _Misc_Analysis[12, 1] = _Not_Critical_Threatned_20_Confirmed_20_Cnt.ToString();
 
             _Characters.Sort();
 
@@ -406,6 +434,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             _Attack_Margin_Analysis[42, 1] = atk_margin_total.ToString();
 
             _Crit_Confirmation_Margin_Analysis[42, 0] = "[b]Total[/b]";
+            _Crit_Confirmation_Margin_Analysis[42, 1] = crit_conf_margin_total.ToString();
 
             _Tables_Stale = false;
         }
