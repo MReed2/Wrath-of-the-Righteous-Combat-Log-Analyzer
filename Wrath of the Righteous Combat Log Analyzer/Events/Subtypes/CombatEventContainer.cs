@@ -24,7 +24,13 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             get
             {
                 StringBuilder tmp = new StringBuilder(base.Source);
-                foreach (CombatEvent curr_evnt in Children) { tmp.Append("\n" + curr_evnt.Source); }
+                int curr_combat_ID = -1;
+                foreach (CombatEvent curr_evnt in Children)
+                {
+                    if (curr_combat_ID == -1) { curr_combat_ID = curr_evnt.Combat_ID; }
+                    if (curr_combat_ID != curr_evnt.Combat_ID) { curr_combat_ID = curr_evnt.Combat_ID; tmp.Append("<hr>\n"); }
+                    tmp.Append(curr_evnt.Source + "\n");
+                }
                 return tmp.ToString();
             }
             set => base.Source = value;
@@ -34,7 +40,13 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             get
             {
                 StringBuilder tmp = new StringBuilder(base.Source_With_ID);
-                foreach (CombatEvent curr_evnt in Children) { tmp.Append("\n" + curr_evnt.Source_With_ID); }
+                int curr_combat_ID = -1;
+                foreach (CombatEvent curr_evnt in Children)
+                {
+                    if (curr_combat_ID == -1) { curr_combat_ID = curr_evnt.Combat_ID; }
+                    if (curr_combat_ID != curr_evnt.Combat_ID) { curr_combat_ID = curr_evnt.Combat_ID; tmp.Append("<hr>\n"); }
+                    tmp.Append(curr_evnt.Source_With_ID + "\n");
+                }
                 return tmp.ToString();
             }
         }
@@ -42,7 +54,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         #region Override Methods
         public override List<Die_Roll> Parse(string line) { _Filename = line; return null; }
 
-        public CombatEventContainer(int inID, string inLine) : base(inID, inLine) { }
+        public CombatEventContainer(int inID, int inCombatID, string inLine) : base(inID, inCombatID, inLine) { }
         #endregion
 
         public event NeedToUpdateCharacterLists OnNeedToUpdateCharacterLists;

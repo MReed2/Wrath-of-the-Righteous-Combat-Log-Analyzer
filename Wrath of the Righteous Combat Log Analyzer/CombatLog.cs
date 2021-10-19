@@ -41,7 +41,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             _Stats.Recalculate_Stats(_Log);
         }
 
-        public CombatEventList Parse(string line)
+        public CombatEventList Parse(int inCombatID, string line)
         {
             CombatEventList rtn_event = new CombatEventList();
             
@@ -93,22 +93,22 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 if (line.Contains("Initiative check"))
                 {
                     _Current_Mode = 1;
-                    _Current_Event = new InitiativeEvent(_Log.Count, line);
+                    _Current_Event = new InitiativeEvent(_Log.Count, inCombatID, line);
                 }
                 else if (line.Contains(" attacks "))
                 {
                     _Current_Mode = 2;
-                    _Current_Event = new AttackEvent(_Log.Count, line);
+                    _Current_Event = new AttackEvent(_Log.Count, inCombatID, line);
                 }
                 else if  ( (line.Contains(" deals ")&&line.Contains(" damage ")) || (line.Contains(" receives ") && line.Contains("damage.") ) )
                 {
                     _Current_Mode = 3;
-                    _Current_Event = new DamageEvent(_Log.Count, line);
+                    _Current_Event = new DamageEvent(_Log.Count, inCombatID, line);
                 }
                 else if (line.Contains(" heals "))
                 {
                     _Current_Mode = 4;
-                    _Current_Event = new HealingEvent(_Log.Count, line);
+                    _Current_Event = new HealingEvent(_Log.Count, inCombatID, line);
                 }
                 else // SimpleEvents are, by defination, only one line in length, so they can just be added immediately.
                 {
@@ -117,11 +117,11 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                         CombatEvent tmp = null;
                         if (line.Contains("Combat Started"))  // This is still a SimpleEvent, but it needs to be split out into its own class
                         {
-                            tmp = new CombatStartEvent(_Log.Count, line);
+                            tmp = new CombatStartEvent(_Log.Count, inCombatID, line);
                         }
                         else
                         {
-                            tmp = new SimpleEvent(_Log.Count, line);
+                            tmp = new SimpleEvent(_Log.Count, inCombatID, line);
                         }
                         _Log.Add(tmp);
                         rtn_event.Add(tmp);

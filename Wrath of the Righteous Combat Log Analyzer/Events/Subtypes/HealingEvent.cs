@@ -35,7 +35,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             get { return _Healing_Dice; }
         }
                         
-        public HealingEvent(int inID, string line):base(inID, line) {  }
+        public HealingEvent(int inID, int inCombatID, string line):base(inID, inCombatID, line) {  }
 
         public override List<Die_Roll> Parse(string line)
         {
@@ -79,7 +79,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 if (tmp_Match.Success)
                 {
                     GroupCollection tmp = tmp_Match.Groups;
-                    _Healing_Dice.Add(new Die_Roll("Healing", _Character_Name, int.Parse(tmp[1].Value), tmp[2].Value));
+                    _Healing_Dice.Add(new Die_Roll("Healing", _Character_Name, Friendly_Name, int.Parse(tmp[1].Value), tmp[2].Value));
                 }
                 else
                 //<div style="margin-left:  50px">	Roll result: <b>47</b>.</div>

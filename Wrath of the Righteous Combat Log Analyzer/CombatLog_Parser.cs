@@ -47,6 +47,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         static int _Number_Of_Consecutive_Events_Loaded = 0;
         static int _Consecutive_Idle_Parser_Loops = 0;
+
+        static int _Num_Of_Combats = 0;
                 
         static public string Full_Path_And_Filename
         {
@@ -90,6 +92,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             _FileNames = in_filenames;
             _FileNames_Indx = 0;
+            _Num_Of_Combats = 0;
 
             Open_Next_InputFile();
 
@@ -270,7 +273,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                                 {
                                     if (new_event is CombatStartEvent)
                                     {
-                                        System.Diagnostics.Debug.WriteLine("Start of new combat");
+                                        _Num_Of_Combats++;
                                         if (_Prev_Start_Of_Combat != null)
                                         {
                                             _Curr_Start_Of_Combat.Vote_For_Role();
@@ -514,7 +517,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         static CombatEventList Parse_Line(string line)
         {
-            return _CombatLog.Parse(line);
+            return _CombatLog.Parse(_Num_Of_Combats, line);
         }
     }
 }

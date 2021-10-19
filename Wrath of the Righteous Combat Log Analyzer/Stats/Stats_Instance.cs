@@ -230,7 +230,20 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             foreach (Die_Roll curr_roll in inEvent.Die_Rolls)
             {
-                _Rolls_CSV.Append(string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8}\n", inEvent.ID, curr_roll.Reason, curr_roll.Num_Of_Dice, curr_roll.Type_Of_Die, curr_roll.Bonus, curr_roll.Roll, ((curr_roll.Target != 0) ? curr_roll.Target.ToString() : ""), curr_roll.Character_Name, "1"));
+                _Rolls_CSV.Append(string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12}\n", 
+                    inEvent.ID, 
+                    inEvent.Combat_ID, 
+                    curr_roll.Reason, 
+                    curr_roll.Num_Of_Dice, 
+                    curr_roll.Type_Of_Die, 
+                    curr_roll.Bonus, 
+                    curr_roll.Roll, 
+                    ((curr_roll.Target != -999) ? curr_roll.Target.ToString() : ""), 
+                    ((curr_roll.Target != -999) ? (curr_roll.Target-curr_roll.Roll).ToString():""), 
+                    curr_roll.Character_Name, 
+                    curr_roll.Friendly_Name, 
+                    inEvent.Character_Type, 
+                    "1"));
 
                 if (curr_roll.Type_Of_Die == 20)
                 {

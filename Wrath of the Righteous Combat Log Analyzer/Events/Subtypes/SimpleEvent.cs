@@ -30,7 +30,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 
         public string Subtype { get => _Subtype; }
 
-        public SimpleEvent(int inID, string line) : base(inID, line) { }
+        public SimpleEvent(int inID, int inCombatID, string line) : base(inID, inCombatID, line) { }
 
         public override List<Die_Roll> Parse(string line)
         {

@@ -31,7 +31,20 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         {
             get
             {
-                StringBuilder tmp_sb = new StringBuilder(string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8}\n", "ID", "Type", "Num Dice", "Dice Type", "Bonus", "Roll", "Roll Required", "Character Name", "Cnt"));
+                StringBuilder tmp_sb = new StringBuilder(string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12}\n", 
+                    "ID", 
+                    "Combat ID", 
+                    "Type", 
+                    "Num Dice", 
+                    "Dice Type", 
+                    "Bonus", 
+                    "Roll", 
+                    "Roll Required", 
+                    "Margin", 
+                    "Character Name", 
+                    "Friendly Name", 
+                    "Faction", 
+                    "Cnt"));
                 tmp_sb.Append(_Stats_Categories[0].Rolls_CSV); // 0 = All
                 return tmp_sb;
             }

@@ -24,7 +24,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             return _Die_Rolls;
         }
 
-        public CombatStartEvent(int inID, string inLine) : base(inID, inLine) { }
+        public CombatStartEvent(int inID, int inCombatID, string inLine) : base(inID, inCombatID, inLine) { }
         #endregion
 
         private int _Strict_Full_Reload_Cnt = 0;

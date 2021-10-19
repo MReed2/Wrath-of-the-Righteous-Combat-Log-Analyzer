@@ -194,7 +194,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         {
             MasterTreeView.Items.Clear();
 
-            CombatEventContainer tmp = new CombatEventContainer(-1, "");
+            CombatEventContainer tmp = new CombatEventContainer(-1, -1, "");
             tmp.OnNeedToCalculateStats += NeedToCalculateStats;
             tmp.OnNeedToUpdateCharacterLists += NeedToUpdateCharacterLists;
 
@@ -277,7 +277,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                         UpdateNamesOfKeyNodes();
                     }
 
-                    CombatEventContainer tmp = new CombatEventContainer(_Root_File_Cnt, inFilename);
+                    CombatEventContainer tmp = new CombatEventContainer(_Root_File_Cnt, -1, inFilename);
                     tmp.OnNeedToCalculateStats += NeedToCalculateStats;
                     tmp.OnNeedToUpdateCharacterLists += NeedToUpdateCharacterLists;
 

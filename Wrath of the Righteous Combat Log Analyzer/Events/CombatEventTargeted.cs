@@ -58,7 +58,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
         }
 
-        public CombatEventTargeted(int inID, string inLine) : base(inID, inLine) { }
+        public CombatEventTargeted(int inID, int inCombatID, string inLine) : base(inID, inCombatID, inLine) { }
 
         public Char_Enum Character_Type_From_Target()
         {

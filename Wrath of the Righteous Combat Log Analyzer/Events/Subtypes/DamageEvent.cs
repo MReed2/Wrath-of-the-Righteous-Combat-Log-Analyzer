@@ -65,7 +65,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public bool Is_Maximized { get => _Is_Maximized; }
 
-        public DamageEvent(int inID, string line):base(inID, line) { }
+        public DamageEvent(int inID, int inCombatID, string line):base(inID, inCombatID, line) { }
 
         public override List<Die_Roll> Parse(string line)
         {
@@ -227,7 +227,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     }
                     else
                     {
-                        dice = new Die_Roll("Damage", _Character_Name, dice_result, pathfinder_dice);
+                        dice = new Die_Roll("Damage", _Character_Name, Friendly_Name, dice_result, pathfinder_dice);
 
                         if (before_attributes.Contains(")"))
                         {

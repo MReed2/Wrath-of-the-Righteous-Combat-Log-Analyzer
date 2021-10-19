@@ -32,6 +32,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private CombatEventList _Children = new CombatEventList();
         private int _Cached_Source_Hashcode = 0;
         private int _Cached_Source_String_Length = 0;
+        private int _Combat_ID = 0;
 
         public int Cached_Source_Hashcode
         {
@@ -121,6 +122,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
         }
 
+        public virtual int Combat_ID { get => _Combat_ID; }
+
         public virtual string Source_With_ID { get => Regex.Replace(_Source, @"(^.*?\x22>)", "$1ID: " + _ID.ToString() + " ", RegexOptions.None); }
 
         public virtual string Source { get => _Source; set => _Source = value; }
@@ -135,7 +138,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public CombatEventList Children { get => _Children; }
 
-        public CombatEvent(int inID, string line) { _ID = inID;  Parse(line); }
+        public CombatEvent(int inID, int inCombatID, string line) { _ID = inID;  _Combat_ID = inCombatID;  Parse(line); }
         
         public abstract List<Die_Roll> Parse(string line);
 

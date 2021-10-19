@@ -11,12 +11,13 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
     {
         private int _Roll = 0;
         private string _Character_Name = "";
+        private string _Friendly_Name = "";
         private string _Reason = "";
         private int _Num_Of_Dice = 1;
         private int _Type_Of_Die = 20;
         private int _Bonus = 0;
-        private int _Target = 0;
-        public bool _Underlined = false;
+        private int _Target = -999;
+        private bool _Underlined = false;
         private List<string> _Before_Flags = new List<string>();
         private List<string> _Attributes = new List<string>();
         private List<string> _After_Flags = new List<string>();
@@ -31,6 +32,12 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         {
             get { return _Character_Name;  }
             set { _Character_Name = value; }
+        }
+
+        public string Friendly_Name
+        {
+            get { return _Friendly_Name; }
+            set { _Friendly_Name = value; }
         }
 
         public string Reason
@@ -90,39 +97,42 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         }
 
         
-        public Die_Roll(string reason, string char_name, int roll)
+        public Die_Roll(string reason, string char_name, string friendly_name, int roll)
         {
             _Reason = reason;
             _Character_Name = char_name;
+            _Friendly_Name = friendly_name;
             /*if ((roll < 1) || (roll > ( (_Type_Of_Die*_Num_Of_Dice) + _Bonus) )) { throw new System.Exception(String.Format("Invalid result {0} on d{1}", roll, _Type_Of_Die)); }
             else {*/
             _Roll = roll; /*}*/
         }
 
-        public Die_Roll(string reason, string char_name, int roll, int die_type, int num_of_dice)
+        public Die_Roll(string reason, string char_name, string friendly_name, int roll, int die_type, int num_of_dice)
         {
             _Num_Of_Dice = num_of_dice;
             _Type_Of_Die = die_type;
             _Reason = reason;
             _Character_Name = char_name;
+            _Friendly_Name = friendly_name;
             /*if ((roll < 1) || (roll > ( (_Type_Of_Die*_Num_Of_Dice) + _Bonus) )) { throw new System.Exception(String.Format("Invalid result {0} on d{1}", roll, _Type_Of_Die)); }
             else {*/
             _Roll = roll; /*}*/
         }
 
-        public Die_Roll(string reason, string char_name, int roll, int die_type, int num_of_dice, int bonus)
+        public Die_Roll(string reason, string char_name, string friendly_name, int roll, int die_type, int num_of_dice, int bonus)
         {
             _Bonus = bonus;
             _Num_Of_Dice = num_of_dice;
             _Type_Of_Die = die_type;
             _Reason = reason;
             _Character_Name = char_name;
+            _Friendly_Name = friendly_name;
             /*if ((roll < 1) || (roll > ( (_Type_Of_Die*_Num_Of_Dice) + _Bonus) )) { throw new System.Exception(String.Format("Invalid result {0} on d{1}", roll, _Type_Of_Die)); }
             else {*/
             _Roll = roll; /*}*/
         }
 
-        public Die_Roll(string reason, string char_name, int roll, string pathfinder_dice)
+        public Die_Roll(string reason, string char_name, string friendly_name, int roll, string pathfinder_dice)
         {
             // 5d8+18
             // 1d20
@@ -154,6 +164,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             _Reason = reason;
             _Character_Name = char_name;
+            _Friendly_Name = friendly_name;
             /*if ((roll < 1) || (roll > ( (_Type_Of_Die*_Num_Of_Dice) + _Bonus) )) { throw new System.Exception(String.Format("Invalid result {0} on d{1}", roll, _Type_Of_Die)); }
             else {*/ _Roll = roll; /*}*/
         }

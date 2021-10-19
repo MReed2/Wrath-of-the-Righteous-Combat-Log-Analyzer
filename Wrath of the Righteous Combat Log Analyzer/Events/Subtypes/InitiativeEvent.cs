@@ -36,7 +36,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             get { return _Initiative; }
         }
         
-        public InitiativeEvent(int inID, string line):base(inID, line) { }
+        public InitiativeEvent(int inID, int inCombatID, string line):base(inID, inCombatID, line) { }
 
         public override List<Die_Roll> Parse(string line)
         {
@@ -101,13 +101,13 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                         Match is_underlined = Regex.Match(fixed_curr_str, @"u>(\d*?)<\/");
                         if (is_underlined.Success) // this value is underlined
                         {
-                            Die_Roll underlined_roll = new Die_Roll("Initiative", _Character_Name, int.Parse(is_underlined.Groups[1].Value));
+                            Die_Roll underlined_roll = new Die_Roll("Initiative", _Character_Name, Friendly_Name, int.Parse(is_underlined.Groups[1].Value));
                             underlined_roll.Underlined = true;
                             _Die_Rolls.Add(underlined_roll);
                         }
                         else
                         {
-                            _Die_Rolls.Add(new Die_Roll("Initiative", _Character_Name, int.Parse(fixed_curr_str)));
+                            _Die_Rolls.Add(new Die_Roll("Initiative", _Character_Name, Friendly_Name, int.Parse(fixed_curr_str)));
                         }
                     }
                                         
