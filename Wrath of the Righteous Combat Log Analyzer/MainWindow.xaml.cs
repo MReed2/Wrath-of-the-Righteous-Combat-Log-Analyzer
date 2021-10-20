@@ -176,16 +176,21 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             {
                 foreach (LoadingAwareTreeViewItem curr_combat in curr_file_tvi.Items)
                 {
-                    if (prev_combat != null) { ((CombatStartEvent)curr_combat.Tag).Update_Reload(prev_combat); }
+                    if (prev_combat != null) { ((CombatStartEvent)curr_combat.Tag).Update_Reload(); }
                     prev_combat = ((CombatStartEvent)curr_combat.Tag);
-                    curr_combat.Header = Regex.Replace((string)curr_combat.Header, @"(\(\d*)(.*\))", "$1") + String.Format
-                        (
-                            " Events, {0} / {1} / {2} / {3})",
-                            ((CombatStartEvent)curr_combat.Tag).Strict_Full_Reload_Cnt,
-                            ((CombatStartEvent)curr_combat.Tag).Loose_Full_Reload_Cnt,
-                            ((CombatStartEvent)curr_combat.Tag).Strict_Starting_Reload_Cnt,
-                            ((CombatStartEvent)curr_combat.Tag).Loose_Starting_Reload_Cnt
-                        );
+                }
+            }
+
+            _Root_TreeViewItem.Header = Regex.Replace((string)_Root_TreeViewItem.Header, @"\((\d*.*?),", string.Format("({0} Reloads,", ((CombatEventContainer)_Root_TreeViewItem.Tag).Reload_Cnt));
+
+            foreach (LoadingAwareTreeViewItem curr_file_tvi in _Root_TreeViewItem.Items)
+            {
+                curr_file_tvi.Header = Regex.Replace((string)curr_file_tvi.Header, @"\((\d*.*?),", string.Format("({0} Reloads,", ((CombatEventContainer)curr_file_tvi.Tag).Reload_Cnt));
+
+                foreach (LoadingAwareTreeViewItem curr_combat in curr_file_tvi.Items)
+                {
+                    prev_combat = ((CombatStartEvent)curr_combat.Tag);
+                    curr_combat.Header = Regex.Replace((string)curr_combat.Header, @"\((\d*.*?),", string.Format("({0} Reloads,", ((CombatEventContainer)curr_combat.Tag).Reload_Cnt));
                 }
             }
         }
@@ -240,20 +245,17 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private void UpdateNamesOfKeyNodes()
         {
             if (_Root_TreeViewItem != null)
-            { _Root_TreeViewItem.Header = Regex.Replace((string)_Root_TreeViewItem.Header, @"(\(.*\))", "") + String.Format("({0} Files, {1} Combats, {2} Events)", _Root_File_Cnt, _Root_Combat_Cnt, _Root_Event_Cnt); }
+            { _Root_TreeViewItem.Header = Regex.Replace((string)_Root_TreeViewItem.Header, @"(\(.*\))", "") + String.Format("({0} Reloads, {1} Files, {2} Combats, {3} Events)", ((CombatEventContainer)_Root_TreeViewItem.Tag).Reload_Cnt, _Root_File_Cnt, _Root_Combat_Cnt, _Root_Event_Cnt); }
             if (_Last_File_Start_TreeView_Item != null)
-            { _Last_File_Start_TreeView_Item.Header = Regex.Replace((string)_Last_File_Start_TreeView_Item.Header, @"(\(.*\))", "") + String.Format("({0} Combats, {1} Events)", _File_Combat_Cnt, _File_Event_Cnt); }
+            { _Last_File_Start_TreeView_Item.Header = Regex.Replace((string)_Last_File_Start_TreeView_Item.Header, @"(\(.*\))", "") + String.Format("({0} Reloads, {1} Combats, {2} Events)", ((CombatEventContainer)_Last_File_Start_TreeView_Item.Tag).Reload_Cnt, _File_Combat_Cnt, _File_Event_Cnt); }
             if (_Last_Combat_Start_TreeViewItem != null)
             {
                 _Last_Combat_Start_TreeViewItem.Header = Regex.Replace((string)_Last_Combat_Start_TreeViewItem.Header, @"(\(.*\))", "") + 
                     String.Format
                     (
-                        "({0} Events, {1} / {2} / {3} / {4})", 
-                        _Combat_Event_Cnt,
-                        ((CombatStartEvent)_Last_Combat_Start_TreeViewItem.Tag).Strict_Full_Reload_Cnt,
-                        ((CombatStartEvent)_Last_Combat_Start_TreeViewItem.Tag).Loose_Full_Reload_Cnt,
-                        ((CombatStartEvent)_Last_Combat_Start_TreeViewItem.Tag).Strict_Starting_Reload_Cnt,
-                        ((CombatStartEvent)_Last_Combat_Start_TreeViewItem.Tag).Loose_Starting_Reload_Cnt
+                        "({0} Reloads, {1} Events)", 
+                        ((CombatStartEvent)_Last_Combat_Start_TreeViewItem.Tag).Reload_Cnt,
+                        _Combat_Event_Cnt
                     );
             }
         }

@@ -32,47 +32,80 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private int _Strict_Starting_Reload_Cnt = 0;
         private int _Loose_Starting_Reload_Cnt = 0;
 
-        private string _Cached_Full_Strict_Combat_String = "";
-        private string _Cached_Full_Loose_Combat_String = "";
-        private string _Cached_Starting_Strict_Combat_String = "";
-        private string _Cached_Starting_Loose_Combat_String = "";
+        private int _Reload_Cnt = 0;
 
-        private string _Cached_Prev_Full_Strict_Combat_String = "";
-        private string _Cached_Prev_Full_Loose_Combat_String = "";
-        private string _Cached_Prev_Starting_Strict_Combat_String = "";
-        private string _Cached_Prev_Starting_Loose_Combat_String = "";
+        protected string Full_Strict_Combat_String { get => Get_Full_Strict_Combat_String(); }
+        protected string Full_Loose_Combat_String { get => Get_Full_Loose_Combat_String(); }
+        protected string Starting_Strict_Combat_String { get => Get_Starting_Strict_Combat_String(); }
+        protected string Starting_Loose_Combat_String { get => Get_Starting_Loose_Combat_String(); }
 
-        public int Strict_Full_Reload_Cnt { get => _Strict_Full_Reload_Cnt;  }
-        public int Loose_Full_Reload_Cnt { get => _Loose_Full_Reload_Cnt; }
-        public int Strict_Starting_Reload_Cnt { get => _Strict_Starting_Reload_Cnt; }
-        public int Loose_Starting_Reload_Cnt { get => _Loose_Starting_Reload_Cnt;  }
+        public int Strict_Full_Reload_Cnt { get => _Strict_Full_Reload_Cnt; protected set => _Strict_Full_Reload_Cnt = value; }
+        public int Loose_Full_Reload_Cnt { get => _Loose_Full_Reload_Cnt; protected set => _Loose_Full_Reload_Cnt = value; }
+        public int Strict_Starting_Reload_Cnt { get => _Strict_Starting_Reload_Cnt; protected set => _Strict_Starting_Reload_Cnt = value; }
+        public int Loose_Starting_Reload_Cnt { get => _Loose_Starting_Reload_Cnt; protected set => _Loose_Starting_Reload_Cnt = value; }
 
-        public bool IsReload { get => ((Strict_Full_Reload_Cnt > 0) || (Loose_Full_Reload_Cnt > 0) || (Strict_Starting_Reload_Cnt > 0) || (Loose_Starting_Reload_Cnt > 0)); }
-        public int Reload_Cnt { get => Math.Max(Strict_Full_Reload_Cnt, Math.Max(Loose_Full_Reload_Cnt, Math.Max(Strict_Starting_Reload_Cnt, Loose_Starting_Reload_Cnt))); }
+        public bool IsReload { get => (_Reload_Cnt > 0); }
+        public override int Reload_Cnt { get => _Reload_Cnt; protected set => _Reload_Cnt = value; }
 
-        public bool Update_Reload(CombatStartEvent in_prev_CombatStartEvent)
+        public bool Update_Reload()
         {
-            _Cached_Full_Strict_Combat_String = Get_Full_Strict_Combat_String();
-            _Cached_Full_Loose_Combat_String = Get_Full_Loose_Combat_String();
-            _Cached_Starting_Strict_Combat_String = Get_Starting_Strict_Combat_String();
-            _Cached_Starting_Loose_Combat_String = Get_Starting_Loose_Combat_String();
+            CombatStartEvent prev_CSS = ((CombatStartEvent)Prev_CombatEventContainer);
 
-            _Cached_Prev_Full_Strict_Combat_String = in_prev_CombatStartEvent.Get_Full_Strict_Combat_String();
-            _Cached_Prev_Full_Loose_Combat_String = in_prev_CombatStartEvent.Get_Full_Loose_Combat_String();
-            _Cached_Prev_Starting_Strict_Combat_String = in_prev_CombatStartEvent.Get_Starting_Strict_Combat_String();
-            _Cached_Prev_Starting_Loose_Combat_String = in_prev_CombatStartEvent.Get_Starting_Loose_Combat_String();
-            
-            //System.Diagnostics.Debug.WriteLine("Strict / Full:\n{0} ==\n{1}", in_prev_CombatStartEvent.Get_Full_Strict_Combat_String(), Get_Full_Strict_Combat_String());
-            //System.Diagnostics.Debug.WriteLine("Loose / Full:\n{0} ==\n{1}", in_prev_CombatStartEvent.Get_Full_Loose_Combat_String(), Get_Full_Loose_Combat_String());
-            //System.Diagnostics.Debug.WriteLine("Strict / Starting:\n{0} ==\n{1}", _Cached_Prev_Starting_Strict_Combat_String, _Cached_Starting_Strict_Combat_String);
-            //System.Diagnostics.Debug.WriteLine("Loose / Starting:\n{0} ==\n{1}", _Cached_Prev_Starting_Loose_Combat_String, _Cached_Starting_Loose_Combat_String);
+            int loop_cnt = 0;
 
-            if (_Cached_Prev_Full_Strict_Combat_String == _Cached_Full_Strict_Combat_String) { _Strict_Full_Reload_Cnt = 1 + in_prev_CombatStartEvent.Strict_Full_Reload_Cnt; }
-            if (_Cached_Prev_Full_Loose_Combat_String == _Cached_Full_Loose_Combat_String) { _Loose_Full_Reload_Cnt = 1 + in_prev_CombatStartEvent.Loose_Full_Reload_Cnt; }
-            if (_Cached_Prev_Starting_Strict_Combat_String == _Cached_Starting_Strict_Combat_String) { _Strict_Starting_Reload_Cnt = 1 + in_prev_CombatStartEvent.Strict_Starting_Reload_Cnt; }
-            if (_Cached_Prev_Starting_Loose_Combat_String == _Cached_Starting_Loose_Combat_String) { _Loose_Starting_Reload_Cnt = 1 + in_prev_CombatStartEvent.Loose_Starting_Reload_Cnt; }
+            while (prev_CSS != null)
+            {
+                if (prev_CSS.Full_Strict_Combat_String == Full_Strict_Combat_String) { _Strict_Full_Reload_Cnt = 1 + prev_CSS.Strict_Full_Reload_Cnt; }
+                if (prev_CSS.Full_Loose_Combat_String == Full_Loose_Combat_String) { _Loose_Full_Reload_Cnt = 1 + prev_CSS.Loose_Full_Reload_Cnt; }
+                if (prev_CSS.Starting_Strict_Combat_String == Starting_Strict_Combat_String) { _Strict_Starting_Reload_Cnt = 1 + prev_CSS.Strict_Starting_Reload_Cnt; }
+                if (prev_CSS.Starting_Loose_Combat_String == Starting_Loose_Combat_String) { _Loose_Starting_Reload_Cnt = 1 + prev_CSS.Loose_Starting_Reload_Cnt; }
 
-            return ((_Strict_Full_Reload_Cnt > 0) || (_Loose_Full_Reload_Cnt > 0) || (_Strict_Starting_Reload_Cnt > 0) || (_Loose_Starting_Reload_Cnt > 0));
+                if ((_Strict_Full_Reload_Cnt > 0) || (_Loose_Full_Reload_Cnt > 0) || (_Strict_Starting_Reload_Cnt > 0) || (_Loose_Starting_Reload_Cnt > 0)) { _Reload_Cnt = 1 + prev_CSS.Reload_Cnt; }
+
+                if (IsReload) { prev_CSS = null; }
+                else
+                {
+                    bool is_subset = true;
+
+                    foreach (CharacterListItem outer_char_itm in prev_CSS.Characters)
+                    {
+                        if (outer_char_itm.Character_Type != Char_Enum.Hostile) { continue; }
+                        if ( (outer_char_itm.Source_Character_Name.Contains("Summon"))&&(!outer_char_itm.Source_Character_Name.Contains("Summoner")) ) { continue; }
+
+                        bool inner_match_found = false;
+
+                        foreach (CharacterListItem inner_char_itm in Characters) // This is intentional -- we *always* check against the current CombatStartEvent
+                        {
+                            if (inner_char_itm.Character_Type != Char_Enum.Hostile) { continue; }
+                            if ((outer_char_itm.Source_Character_Name.Contains("Summon")) && (!outer_char_itm.Source_Character_Name.Contains("Summoner"))) { continue; }
+                            if (outer_char_itm.Friendly_Name == inner_char_itm.Friendly_Name) { inner_match_found = true; break; }
+                        }
+
+                        if (!inner_match_found) { is_subset = false; break; }
+                    }
+
+                    if (!is_subset) { prev_CSS = null; }
+                    else { prev_CSS = (CombatStartEvent)prev_CSS.Prev_CombatEventContainer; loop_cnt++; }
+                }
+            }
+
+            if ((IsReload)&&(loop_cnt > 0))
+            {
+                prev_CSS = (CombatStartEvent)Prev_CombatEventContainer;
+                while (loop_cnt > 0) { prev_CSS = (CombatStartEvent)prev_CSS.Prev_CombatEventContainer; loop_cnt--; }
+
+                CombatStartEvent next_CSS = (CombatStartEvent)prev_CSS.Next_CombatEventContainer;
+                do
+                {
+                    next_CSS.Reload_Cnt = 1 + prev_CSS.Reload_Cnt;
+
+                    prev_CSS = next_CSS;
+                    next_CSS = (CombatStartEvent)prev_CSS.Next_CombatEventContainer;
+
+                } while (prev_CSS != this);
+            }
+
+            return IsReload;
         }
 
         private string Get_Full_Strict_Combat_String()

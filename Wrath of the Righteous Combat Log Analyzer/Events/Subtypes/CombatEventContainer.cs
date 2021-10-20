@@ -13,7 +13,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
     public delegate void NeedToCalculateStatsDelegate(CombatEventContainer sender, CombatStats newStatsToRecalc, CombatEventList inCombatEventList);
     public delegate void NeedToUpdateCharacterLists(CombatEventContainer sender, CharacterList newOverride);
 
-    public class CombatEventContainer: CombatEvent
+    public class CombatEventContainer : CombatEvent
     {
         #region Override Properties
         public override string Character_Name { get => _Filename; set => throw new NotImplementedException(); }
@@ -67,6 +67,9 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private CharacterList _Characters = new CharacterList();
         private CombatStats _Stats = new CombatStats();
 
+        private CombatEventContainer _Prev_CombatEventContainer = null;
+        private CombatEventContainer _Next_CombatEventContainer = null;
+
         private int _Children_Count_When_Characters_Last_Refreshed = -1;
         private int _Children_Count_When_Stats_Last_Refreshed = -1;
         private bool _Has_Rendered_Character_UC_After_Refresh = false;
@@ -86,6 +89,47 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         public string Filename { get => _Filename; }
 
         public CombatStats Stats { get => _Stats; }
+
+        public virtual int Reload_Cnt
+        {
+            get => Children.Sum((x) => 
+            
+                ((x is CombatStartEvent) && ((CombatStartEvent)x).IsReload) ? 1 : 
+                  !(x is CombatStartEvent)&&(x is CombatEventContainer) ? ((CombatEventContainer)x).Reload_Cnt : 0
+            );
+            protected set => throw new System.NotImplementedException();
+        }
+
+        public CombatEventContainer Prev_CombatEventContainer
+        {
+            get => _Prev_CombatEventContainer;
+            set
+            {
+                if (value == null) { _Prev_CombatEventContainer = null; }
+                else
+                {
+                    _Prev_CombatEventContainer = value;
+                    if (_Prev_CombatEventContainer.Next_CombatEventContainer == null) { _Prev_CombatEventContainer.Next_CombatEventContainer = this; }
+                    else if (_Prev_CombatEventContainer.Next_CombatEventContainer != this) { throw new System.Exception("Inconsistency detected in \"Prev_CombatEventContainer\""); }
+                }
+            }
+        }
+
+        public CombatEventContainer Next_CombatEventContainer
+        {
+            get => _Next_CombatEventContainer;
+            set
+            {
+                if (value == null) { _Next_CombatEventContainer = null; }
+                else
+                {
+                    _Next_CombatEventContainer = value;
+                    if (_Next_CombatEventContainer.Prev_CombatEventContainer == null) { _Next_CombatEventContainer.Prev_CombatEventContainer = this; }
+                    else if (_Next_CombatEventContainer.Prev_CombatEventContainer != this) { throw new System.Exception("Inconsistency detected in \"Prev_CombatEventContainer\""); }
+                }
+            }
+        }
+
 
         #region Dealing with Characters List
         public CharacterList Characters

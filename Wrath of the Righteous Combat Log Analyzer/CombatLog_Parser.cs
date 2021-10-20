@@ -277,7 +277,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                                         if (_Prev_Start_Of_Combat != null)
                                         {
                                             _Curr_Start_Of_Combat.Vote_For_Role();
-                                            _Curr_Start_Of_Combat.Update_Reload(_Prev_Start_Of_Combat);
+                                            _Curr_Start_Of_Combat.Prev_CombatEventContainer = _Prev_Start_Of_Combat;
+                                            _Curr_Start_Of_Combat.Update_Reload();
                                         }
 
                                         _Prev_Start_Of_Combat = _Curr_Start_Of_Combat;
@@ -323,6 +324,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     if ((_Number_Of_Consecutive_Events_Loaded > 500)&&(_Consecutive_Idle_Parser_Loops==0)) { _Consecutive_Idle_Parser_Loops = 50; }
                     if (_Consecutive_Idle_Parser_Loops == 50) // (50*50) = 2500 ms = 2.5 seconds of idle time
                     {
+                        _Curr_Start_Of_Combat.Prev_CombatEventContainer = _Prev_Start_Of_Combat;
+
                         string status_str = String.Format(
                             "Removed {0} duplicates, added {1} events ({2} Attacks, {3} Damages, {4} Healing, {5} Initiative, {6} Simple, {7} Other)",
                             _CombatLog.Duplicate_Count,
