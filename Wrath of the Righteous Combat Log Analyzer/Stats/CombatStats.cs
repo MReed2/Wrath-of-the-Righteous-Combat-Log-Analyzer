@@ -487,7 +487,13 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             {
                 for (int y = 0; y <= inArray.GetUpperBound(1); y++)
                 {
-                    str.Append(inArray[x, y].Replace("\n", "")+"\t");
+                    string out_txt = inArray[x, y];
+
+                    if (out_txt.Contains("("))
+                    {
+                        out_txt = out_txt.Substring(0, out_txt.IndexOf('('));
+                    }
+                    str.Append(out_txt.Replace("\n", "")+"\t");
                 }
                 str.Remove(str.Length - 1, 1);
                 str.Append("\n");
