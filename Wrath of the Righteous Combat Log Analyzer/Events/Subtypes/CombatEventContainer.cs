@@ -235,7 +235,10 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         protected void Update_Characters_List()
         {
-            if ((_Children_Count_When_Characters_Last_Refreshed != Children.Count)||(_Children_Changed)) { Force_Update_Characters_List(); }
+            if ((_Children_Count_When_Characters_Last_Refreshed != Children.Count)||(_Children_Changed))
+            {
+                Force_Update_Characters_List();
+            }
         }
 
         protected void Force_Update_Characters_List()
@@ -243,32 +246,34 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             // *Don't* clear the _Characters list!
             //
             // Any overrides the users has applied should still be valid -- we just need to add more items to the list, or update it with changes from elsewhere
-
-            _Updating_Characters_List = true; // Suppress change notifications while the update is performed.
-
-            System.Diagnostics.Debug.WriteLine("Entering Update_Characters_List() {0}, {1} Events", System.DateTime.Now, Children.Count);
-
-            foreach (CombatEvent curr_event in Children)
+            
+            /* Task.Run( () => */
             {
-                if (curr_event is CombatStartEvent) { }
-                else if ((curr_event is SimpleEvent) && (((SimpleEvent)curr_event).Subtype != "Death")) { }
-                else
+                _Updating_Characters_List = true; // Suppress change notifications while the update is performed.
+
+                // System.Diagnostics.Debug.WriteLine("Entering Update_Characters_List() {0}, {1} Events", System.DateTime.Now, Children.Count);
+                
+                foreach (CombatEvent curr_event in Children)
                 {
-                    _Characters.Add(new CharacterListItem(curr_event));
-                    // This line *DOES* do something new -- it adds the /target/ of the event to the characters list, if it isn't a duplicate.
-                    if (curr_event is CombatEventTargeted) { _Characters.Add(new TargetedCharacterListItem((CombatEventTargeted)curr_event)); }
-                } // CharacterListItem and CharacterList manage duplicate entries -- no need to do so here
-            }
+                    if (curr_event is CombatStartEvent) { }
+                    else if ((curr_event is SimpleEvent) && (((SimpleEvent)curr_event).Subtype != "Death")) { }
+                    else
+                    {
+                        _Characters.Add(new CharacterListItem(curr_event));
+                        // This line *DOES* do something new -- it adds the /target/ of the event to the characters list, if it isn't a duplicate.
+                        if (curr_event is CombatEventTargeted) { _Characters.Add(new TargetedCharacterListItem((CombatEventTargeted)curr_event)); }
+                    } // CharacterListItem and CharacterList manage duplicate entries -- no need to do so here
+                }
+                Vote_For_Role();
 
-            Vote_For_Role();
+                _Children_Count_When_Characters_Last_Refreshed = Children.Count;
+                _Children_Changed = false;
+                _Has_Rendered_Character_UC_After_Refresh = false; // Need to rebuild the control.
+                _Has_Rendered_Stats_UC_After_Refresh = false; // Stats also need to be rebuilt.
+                _Updating_Characters_List = false; // Reenable change notifications.
 
-            _Children_Count_When_Characters_Last_Refreshed = Children.Count;
-            _Children_Changed = false;
-            _Has_Rendered_Character_UC_After_Refresh = false; // Need to rebuild the control.
-            _Has_Rendered_Stats_UC_After_Refresh = false; // Stats also need to be rebuilt.
-            _Updating_Characters_List = false; // Reenable change notifications.
-
-            System.Diagnostics.Debug.WriteLine("Exiting Update_Characters_List() {0}", System.DateTime.Now);
+                // System.Diagnostics.Debug.WriteLine("Exiting Update_Characters_List() {0}", System.DateTime.Now);
+            }/* ).Wait(); */
         }
 
         private UserControl Get_UserControl_For_Characters()

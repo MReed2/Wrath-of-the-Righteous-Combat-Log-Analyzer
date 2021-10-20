@@ -42,6 +42,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 
         public MainWindow()
         {
+            System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level = System.Diagnostics.SourceLevels.Critical;
             InitializeComponent();
             CombatLog_Parser.OnNewCombatEvent += CombatLog_Parser_OnNewCombatEvent;
             CombatLog_Parser.OnParserIdle += CombatLog_Parser_OnParserIdle;
