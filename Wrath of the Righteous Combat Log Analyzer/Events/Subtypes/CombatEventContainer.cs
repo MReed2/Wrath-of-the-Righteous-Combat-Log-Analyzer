@@ -90,6 +90,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public CombatStats Stats { get => _Stats; }
 
+        public CharacterList Characters_Override { get => _Characters_Override; }
+
         public virtual int Reload_Cnt
         {
             get => Children.Sum((x) => 
@@ -100,6 +102,43 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             protected set => throw new System.NotImplementedException();
         }
 
+        public virtual int Combats_Cnt_Without_Reload
+        {
+            get
+            {
+                int sum = 0;
+
+                foreach (CombatEvent curr_evnt in Children) { if (curr_evnt is CombatEventContainer) { sum += ((CombatEventContainer)curr_evnt).Combats_Cnt_Without_Reload; } }
+
+                return sum;
+            }
+        }
+
+        public virtual int Combats_Cnt_With_At_Least_One_Reload
+        {
+            get
+            {
+                int sum = 0;
+
+                foreach (CombatEvent curr_event in Children) { if (curr_event is CombatEventContainer) { sum += ((CombatEventContainer)curr_event).Combats_Cnt_With_At_Least_One_Reload; } }
+
+                return sum;
+            }
+        }
+
+        public virtual int Combats_Cnt
+        {
+            get
+            {
+                int sum = 0;
+
+                foreach (CombatEvent curr_evnt in Children) { if (curr_evnt is CombatEventContainer) { sum += ((CombatEventContainer)curr_evnt).Combats_Cnt; } }
+
+                return sum;
+
+            }
+        }
+        
         public CombatEventContainer Prev_CombatEventContainer
         {
             get => _Prev_CombatEventContainer;
@@ -128,6 +167,30 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     else if (_Next_CombatEventContainer.Prev_CombatEventContainer != this) { throw new System.Exception("Inconsistency detected in \"Prev_CombatEventContainer\""); }
                 }
             }
+        }
+
+        public virtual bool Update_Reload()
+        {
+            bool rtn = false;
+
+            foreach (CombatEvent curr_event in Children)
+            {
+                if (curr_event is CombatEventContainer)
+                {
+                    // This statement:
+
+                    // rtn = ((CombatEventContainer)curr_event).Update_Reload() || rtn;
+
+                    // *does not* produce the same results as
+
+                    // rtn = rtn || ((CombatEventContainer)curr_event).Update_Reload();
+
+                    // Why is left as an exercise for the reader. :)
+                    rtn = ((CombatEventContainer)curr_event).Update_Reload() || rtn;
+                }
+            }
+
+            return rtn;
         }
 
 
@@ -169,8 +232,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 // System.Diagnostics.Debug.WriteLine("changed_cnt = {0}", changed_cnt);
             } while ((changed_cnt > 0));
         }
-
-        public CharacterList Characters_Override { get => _Characters_Override; }
 
         protected void Update_Characters_List()
         {
@@ -718,9 +779,69 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 Grid grid = new Grid();
                 DockPanel.SetDock(grid, Dock.Top);
                 dockPanel.Children.Add(grid);
-                
+
+                Update_Characters_List();
+                Update_Reload();
+
                 grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new System.Windows.GridLength(0, System.Windows.GridUnitType.Star) });
                 grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new System.Windows.GridLength(50, System.Windows.GridUnitType.Star) });
+
+                if (this is CombatStartEvent) { }
+                else
+                {
+                    string[,] data_reload =
+                    {
+                        { "# of distinct combats", Combats_Cnt_Without_Reload.ToString() },
+                        { "# of distinct combats reloaded at least once", Combats_Cnt_With_At_Least_One_Reload.ToString() },
+                        { "Reload Rate", string.Format("{0:P}", (float)Combats_Cnt_With_At_Least_One_Reload / (float)Combats_Cnt_Without_Reload) }
+                    };
+
+                    grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(0, GridUnitType.Auto) });
+                    ScrollViewer data_scrollViewer = New_Windows_Table("Reload Statistics", data_reload, 1, 500);
+                    Grid data_Grid = (Grid)data_scrollViewer.Content;
+                    data_scrollViewer.Content = null;
+
+                    Grid.SetRow(data_Grid, grid.RowDefinitions.Count - 1);
+                    Grid.SetColumn(data_Grid, 0);
+                    Grid.SetColumnSpan(data_Grid, 2);
+                    grid.Children.Add(data_Grid);
+
+                    // This doesn't actually do anything, because while nested CombatEventContainers is a thing for display (in the tree view), the data structures aren't nested.
+                    // The root node directly contains all of the events, including combatstartevents, for all data that is loaded.
+
+                    // I'm leaving it in because...  Well, it isn't *impossible* that I'll change how things work, and this would be a useful think to have if I do. :)
+
+                    List<CombatEvent> Non_CombatStartEvent_Children = Children.FindAll((curr_evnt) => ((curr_evnt is CombatEventContainer) && (!(curr_evnt is CombatStartEvent))));
+
+                    if (Non_CombatStartEvent_Children.Count > 0)
+                    {
+                        string[,] file_reload_stats = new string[Non_CombatStartEvent_Children.Count+1, 1];
+                        file_reload_stats[0, 0] = "Filename";
+                        file_reload_stats[0, 1] = "Reload Rate";
+                        int row_cnt = 1;
+                        foreach (CombatEvent curr_event in Non_CombatStartEvent_Children)
+                        {
+                            CombatEventContainer curr_CEC = (CombatEventContainer)curr_event;
+
+                            curr_CEC.Update_Characters_List();
+                            curr_CEC.Update_Reload();
+
+                            file_reload_stats[row_cnt, 0] = System.IO.Path.GetFileName(curr_CEC.Filename);
+                            file_reload_stats[row_cnt, 1] = string.Format("{0:P}", (float)curr_CEC.Combats_Cnt_With_At_Least_One_Reload / (float)curr_CEC.Combats_Cnt_Without_Reload);
+                            row_cnt++;
+                        }
+
+                        grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(0, GridUnitType.Auto) });
+                        ScrollViewer file_reload_scrollViewer = New_Windows_Table("Reload Detail Statistics", data_reload, 1, 500);
+                        Grid file_reload_Grid = (Grid)data_scrollViewer.Content;
+                        file_reload_scrollViewer.Content = null;
+
+                        Grid.SetRow(file_reload_Grid, grid.RowDefinitions.Count - 1);
+                        Grid.SetColumn(file_reload_Grid, 0);
+                        Grid.SetColumnSpan(file_reload_Grid, 2);
+                        grid.Children.Add(file_reload_Grid);
+                    }
+                }
 
                 grid.RowDefinitions.Add(new RowDefinition() { Height = new System.Windows.GridLength(0, System.Windows.GridUnitType.Auto) });
                 TextBlock char_title = new TextBlock() { HorizontalAlignment = System.Windows.HorizontalAlignment.Center };

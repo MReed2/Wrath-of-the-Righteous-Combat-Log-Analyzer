@@ -21,6 +21,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         #region Override Methods
         public override List<Die_Roll> Parse(string line)
         {
+            Source += line;
             return _Die_Rolls;
         }
 
@@ -46,10 +47,15 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public bool IsReload { get => (_Reload_Cnt > 0); }
         public override int Reload_Cnt { get => _Reload_Cnt; protected set => _Reload_Cnt = value; }
+        public override int Combats_Cnt_Without_Reload { get => ( (IsReload) ? 0 : 1); }
+        public override int Combats_Cnt_With_At_Least_One_Reload { get => ((Reload_Cnt == 1) ? 1 : 0); } // This is correct, despite the name -- we are interested in the number of *unique combats* that were reloaded at least once.  Using >= would produce the number of combats *total* with at least one reload.
+        public override int Combats_Cnt { get => 1; }
 
-        public bool Update_Reload()
+        public override bool Update_Reload()
         {
             CombatStartEvent prev_CSS = ((CombatStartEvent)Prev_CombatEventContainer);
+
+            System.Diagnostics.Debug.WriteLine("In CombatStartEvent.Update_Reload()");
 
             int loop_cnt = 0;
 
@@ -196,7 +202,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             // to be displayed in the stats block.  Thus, the code exists, but it is never called.
 
             string[,] data_all =
-{
+                {
                     { "# of Events", Children.Count.ToString() },
                     { "# of Characters", Characters.GetAll().Count.ToString() },
                     { "# of Unique Characters", Characters.Count.ToString() },

@@ -176,7 +176,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             {
                 foreach (LoadingAwareTreeViewItem curr_combat in curr_file_tvi.Items)
                 {
-                    if (prev_combat != null) { ((CombatStartEvent)curr_combat.Tag).Update_Reload(); }
+                    // if (prev_combat != null) { ((CombatStartEvent)curr_combat.Tag).Update_Reload(); }
                     prev_combat = ((CombatStartEvent)curr_combat.Tag);
                 }
             }
