@@ -193,6 +193,30 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             return rtn;
         }
 
+        public void Clear()
+        {
+            _Filename = "";
+            _Characters_Override.Clear();
+            _Characters.Clear();
+            Children.Clear();
+            _Stats.Clear_Stats();
+
+            _Prev_CombatEventContainer = null;
+            _Next_CombatEventContainer = null;
+
+            _Children_Count_When_Characters_Last_Refreshed = -1;
+            _Children_Count_When_Stats_Last_Refreshed = -1;
+            _Has_Rendered_Character_UC_After_Refresh = false;
+            _Has_Rendered_Stats_UC_After_Refresh = false;
+            _Updating_Characters_List = false;
+
+            _Characters_Updating_Async = false;
+            _Stats_Updating_Async = false;
+            _Children_Changed = false;
+
+            base.Source = "";
+        }
+
 
         #region Dealing with Characters List
         public CharacterList Characters
@@ -311,7 +335,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             if (_Has_Rendered_Character_UC_After_Refresh) { return tmp_UC; }
 
-            System.Diagnostics.Debug.WriteLine("Entering Update_Characters_UserControl() {0}", System.DateTime.Now);
+            // System.Diagnostics.Debug.WriteLine("Entering Update_Characters_UserControl() {0}", System.DateTime.Now);
 
             _Has_Rendered_Character_UC_After_Refresh = true;
 
@@ -771,6 +795,13 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public override UserControl Get_UserControl_For_Display()
         {
+            string[,] data_reload =
+                    {
+                        { "# of distinct combats", Combats_Cnt_Without_Reload.ToString() },
+                        { "# of distinct combats reloaded at least once", Combats_Cnt_With_At_Least_One_Reload.ToString() },
+                        { "Reload Rate", string.Format("{0:P}", (float)Combats_Cnt_With_At_Least_One_Reload / (float)Combats_Cnt_Without_Reload) }
+                    };
+
             if (_UC_For_Display == null)
             {
                 _UC_For_Display = new UserControl();
@@ -794,13 +825,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 if (this is CombatStartEvent) { }
                 else
                 {
-                    string[,] data_reload =
-                    {
-                        { "# of distinct combats", Combats_Cnt_Without_Reload.ToString() },
-                        { "# of distinct combats reloaded at least once", Combats_Cnt_With_At_Least_One_Reload.ToString() },
-                        { "Reload Rate", string.Format("{0:P}", (float)Combats_Cnt_With_At_Least_One_Reload / (float)Combats_Cnt_Without_Reload) }
-                    };
-
                     grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(0, GridUnitType.Auto) });
                     ScrollViewer data_scrollViewer = New_Windows_Table("Reload Statistics", data_reload, 1, 500);
                     Grid data_Grid = (Grid)data_scrollViewer.Content;
@@ -928,8 +952,29 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
                 if (Children.Count < 1000) { webBrowser.NavigateToString(Filter_String_For_WebBrowser(Source_With_ID)); }
                 else { webBrowser.NavigateToString(string.Format("Refresh to view {0} events -- this may take a while to generate!", Children.Count)); }
+            }
+            else
+            {
+                ScrollViewer scrollViewer = (ScrollViewer)_UC_For_Display.Content;
+                DockPanel dockPanel = (DockPanel)scrollViewer.Content;
+                Grid grid = (Grid)dockPanel.Children[0];
 
+                Update_Characters_List();
+                Update_Reload();
 
+                if (this is CombatStartEvent) { }
+                {
+                    Update_A_Windows_Table(grid, "Reload Statistics", data_reload, 1);
+                }
+
+                Update_Characters_UserControl();
+                _Stats.Update_Analysis_UserControl();
+
+                WebBrowser webBrowser = null;
+
+                foreach (UIElement curr_elem in grid.Children) { if (curr_elem is WebBrowser) { webBrowser = (WebBrowser)curr_elem; break; } }
+
+                webBrowser.NavigateToString(string.Format("Click on refersh to {0} events", Children.Count));
             }
 
             return _UC_For_Display;

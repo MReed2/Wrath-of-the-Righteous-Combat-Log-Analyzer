@@ -173,15 +173,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         {
             CombatStartEvent prev_combat = null;
 
-            foreach (LoadingAwareTreeViewItem curr_file_tvi in _Root_TreeViewItem.Items)
-            {
-                foreach (LoadingAwareTreeViewItem curr_combat in curr_file_tvi.Items)
-                {
-                    // if (prev_combat != null) { ((CombatStartEvent)curr_combat.Tag).Update_Reload(); }
-                    prev_combat = ((CombatStartEvent)curr_combat.Tag);
-                }
-            }
-
             _Root_TreeViewItem.Header = Regex.Replace((string)_Root_TreeViewItem.Header, @"\((\d*.*?),", string.Format("({0} Reloads,", ((CombatEventContainer)_Root_TreeViewItem.Tag).Reload_Cnt));
 
             foreach (LoadingAwareTreeViewItem curr_file_tvi in _Root_TreeViewItem.Items)
@@ -224,10 +215,13 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             if ((_Last_File_Start_TreeView_Item == null)||(_Last_File_Start_TreeView_Item==null)) { InitRootNode(); }
             else
             {
-                foreach (CombatEvent curr_event in ((CombatEventContainer)_Last_File_Start_TreeView_Item.Tag).Children)
-                {
-                    ((CombatEventContainer)_Root_TreeViewItem.Tag).Children.Remove(curr_event);
-                }
+                CombatEventList events_to_remove = new CombatEventList();
+
+                foreach (CombatEvent curr_itm in ((CombatEventContainer)_Last_File_Start_TreeView_Item.Tag).Children) { events_to_remove.Add(curr_itm); }
+                foreach (CombatEvent curr_itm in events_to_remove) { ((CombatEventContainer)_Root_TreeViewItem.Tag).Children.Remove(curr_itm); }
+
+                ((CombatEventContainer)_Last_File_Start_TreeView_Item.Tag).Clear();
+                
                 ((CombatEventContainer)_Root_TreeViewItem.Tag).Force_Rebuild_Of_Character_Data();
                 ((CombatEventContainer)_Root_TreeViewItem.Tag).Recalc_Stats_Immediately_If_needed();
                 
@@ -240,6 +234,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 _Last_File_Start_TreeView_Item.Items.Clear();
 
                 UpdateNamesOfKeyNodes();
+
+                Update_Reload();
             }
         }
 

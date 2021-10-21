@@ -199,6 +199,83 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             return scrollViewer;
         }
 
+        public Grid Update_A_Windows_Table(Grid inVery_Outer_Grid, string title, string[,] array_to_display, int num_of_columns = 1)
+        {
+            Grid outer_grid = null;
+
+            int num_items_per_col = (array_to_display.GetUpperBound(0) + 1) / num_of_columns;
+            if (((array_to_display.GetUpperBound(0) + 1) % num_of_columns) != 0) { num_items_per_col++; }
+
+            foreach (UIElement title_search_elem in inVery_Outer_Grid.Children)
+            {
+                UIElement tmp_elem = title_search_elem;
+
+                if (tmp_elem is ScrollViewer)
+                {
+                    if (((ScrollViewer)tmp_elem).Content is UIElement)
+                    {
+                        tmp_elem = (UIElement)((ScrollViewer)tmp_elem).Content;
+                    }
+                }
+
+                if (tmp_elem is Grid)
+                {
+                    Grid title_search_inner_grid = (Grid)tmp_elem;
+
+                    foreach (UIElement title_search_inner_grid_elem in title_search_inner_grid.Children)
+                    {
+                        if (title_search_inner_grid_elem is TextBlock)
+                        {
+                            foreach (Inline curr_inline in ((TextBlock)title_search_inner_grid_elem).Inlines)
+                            {
+                                if (curr_inline is Run)
+                                {
+                                    if ( ((Run)curr_inline).Text == title )
+                                    {
+                                        outer_grid = title_search_inner_grid;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (outer_grid != null) { break; }
+                        }
+                    }
+                }
+
+                if (outer_grid != null) { break; }
+            }
+
+            if (outer_grid == null) { throw new System.Exception("Cannot find grid"); }
+
+            foreach (UIElement outer_curr_elem in outer_grid.Children)
+            {
+                if (outer_curr_elem is Grid)
+                {
+                    Grid middle_grid = (Grid)outer_curr_elem;
+                    int middle_row = Grid.GetRow(middle_grid);
+                    int middle_col = Grid.GetColumn(middle_grid);
+
+                    foreach (UIElement inner_curr_elem in middle_grid.Children)
+                    {
+                        if (inner_curr_elem is TextBlock)
+                        {
+                            TextBlock tb = (TextBlock)inner_curr_elem;
+                            int inner_row = Grid.GetRow(tb);
+                            int inner_col = Grid.GetColumn(tb);
+
+                            int array_row = (middle_col * num_items_per_col) + inner_row;
+                            int array_col = inner_col;
+
+                            tb.Text = array_to_display[array_row, array_col];
+                        }
+                    }
+                }
+            }
+
+            return outer_grid;
+        }
+
         public Grid Create_A_Windows_Table(string[,] inArray, int start_row = 0, int end_row = int.MaxValue)
         {
             if (end_row > inArray.GetUpperBound(0)) { end_row = inArray.GetUpperBound(0); }

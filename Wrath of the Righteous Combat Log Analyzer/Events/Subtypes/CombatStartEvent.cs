@@ -55,7 +55,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         {
             CombatStartEvent prev_CSS = ((CombatStartEvent)Prev_CombatEventContainer);
 
-            System.Diagnostics.Debug.WriteLine("In CombatStartEvent.Update_Reload()");
+            // System.Diagnostics.Debug.WriteLine("In CombatStartEvent.Update_Reload()");
 
             int loop_cnt = 0;
 
