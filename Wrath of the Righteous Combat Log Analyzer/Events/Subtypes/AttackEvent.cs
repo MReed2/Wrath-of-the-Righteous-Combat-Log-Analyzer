@@ -388,6 +388,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                         //<div style="margin-left: 150px">Attack result: 20.		Target's Armor Class: 24.		Result: hit	</div>
                         //<div style="margin-left: 150px">Attack result: 1.		Target's Armor Class: 37.		Result: critical miss</div>
                         //<div style="margin-left:  50px">Attack result: 2, <b><u>1</u></b> [Misfortune].		Target's Armor Class: 28.		Result: critical miss</div>
+                        //<div style="margin-left:  50px">Attack result: 2, <b><u>1</u></b>.		Target's Armor Class: 28.		Result: critical miss</div>
 
                         Regex extract_attack_roll = new Regex(@"(.*?>).*?: (.*?).\t.*?: ([+-]?\d*?)\.?\s\s");
                         GroupCollection extract_attack_roll_results = extract_attack_roll.Match(line).Groups;
@@ -412,7 +413,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                         //<div style="margin-left:  50px">Attack result: 32 (roll: 13, <b><u>4</u></b> [Touch of Chaos] + modifiers: 28)		Target's Armor Class: 22		Result: hit</div>
                         //<div style="margin-left:  50px">Attack result: 17 (roll: 19 + modifiers: -2)		Target's Armor Class: 41		Result: miss</div>
                         //<div style="margin-left:  50px">Attack result: 24 (roll: 19 + modifiers: 5)		Target's Armor Class: -7		Result: hit</div>
-                        Regex extract_attack_roll = new Regex(@"(.*?>).*?: (\d*?) .*?: (.*?) .*?: ([+-]?\d*?)\).*?: ([+-]?\d*?)\t\t");
+                        //<div style="margin-left:  50px">Attack result: 48 (roll: 18, <b><u>4</u></b> + modifiers: 44)		Target's Armor Class: 31		Result: hit</div>
+                        Regex extract_attack_roll = new Regex(@"(.*?>).*?: (\d*?) .*?: (.*?) \+.*?: ([+-]?\d*?)\).*?: ([+-]?\d*?)\t\t");
                         GroupCollection extract_attack_roll_results = extract_attack_roll.Match(line).Groups;
                         _Net_Attack_Value = int.Parse(extract_attack_roll_results[2].Value);
                         string attack_die_rolls = extract_attack_roll_results[3].Value;
@@ -420,9 +422,10 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                         _Target_AC = int.Parse(extract_attack_roll_results[5].Value);
                         if (attack_die_rolls.Contains(","))
                         {
-                            // This regular expression is subtly different -- instead of ending the 3rd capture group with a space, it looks for a "[" instead.  This ensures that all the
-                            // numbers rolled gets included in the result set.
-                            attack_die_rolls = Regex.Match(line, @"(.*?>).*?: (\d*?) .*?: (.*?)\[.*?: (\d*?)\).*?: (\d*?)\t\t").Groups[3].Value;
+                            //13, <b><u>4</u></b> [Touch of Chaos]
+                            //18, <b><u>4</u></b>
+
+                            attack_die_rolls = Regex.Replace(attack_die_rolls, @"(?: \[.*?\])", ""); // Remove anything that is within square brackets.
 
                             //13, <b><u>4</u></b> 
                             // One or both of the entries will be underlined
