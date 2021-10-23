@@ -85,8 +85,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             if (_Root_TreeViewItem != null)
             {
                 _Root_TreeViewItem.IsLoading = false;
-                _Last_File_Start_TreeView_Item.IsLoading = false;
-                _Last_Combat_Start_TreeViewItem.IsLoading = false;
+                if (_Last_File_Start_TreeView_Item != null) { _Last_File_Start_TreeView_Item.IsLoading = false; }
+                if (_Last_Combat_Start_TreeViewItem != null) { _Last_Combat_Start_TreeViewItem.IsLoading = false; }
                 UpdateNamesOfKeyNodes();
 
                 if (MasterTreeView.SelectedItem == _Root_TreeViewItem)
