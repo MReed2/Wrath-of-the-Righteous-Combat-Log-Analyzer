@@ -12,6 +12,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 {
     public delegate void NeedToCalculateStatsDelegate(CombatEventContainer sender, CombatStats newStatsToRecalc, CombatEventList inCombatEventList);
     public delegate void NeedToUpdateCharacterLists(CombatEventContainer sender, CharacterList newOverride);
+    public delegate void ReloadUpdated(CombatEventContainer sender);
 
     public class CombatEventContainer : CombatEvent
     {
@@ -61,6 +62,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public event NeedToUpdateCharacterLists OnNeedToUpdateCharacterLists;
         public event NeedToCalculateStatsDelegate OnNeedToCalculateStats;
+        public event ReloadUpdated OnReloadUpdated;
 
         private string _Filename = "";
         private CharacterList _Characters_Override = new CharacterList();
@@ -255,6 +257,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 }
                 // System.Diagnostics.Debug.WriteLine("changed_cnt = {0}", changed_cnt);
             } while ((changed_cnt > 0));
+
+            OnReloadUpdated?.Invoke(this);
         }
 
         protected void Update_Characters_List()
@@ -477,14 +481,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     if (curr_itm.Character_Type != new_val)
                     {
                         madeChange = true;
-                        curr_itm.Character_Type = new_val;
+                        curr_itm.Set_Character_Type(new_val);
                         _Characters_Override.Add(curr_itm);
-
-                        foreach (CharacterListItem child_itm in curr_itm.Children)
-                        {
-                            child_itm.Character_Type = new_val;
-                            _Characters_Override.Add(child_itm);
-                        }
                     }
                 }
             }
@@ -493,6 +491,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             {
                 _Has_Rendered_Character_UC_After_Refresh = false;
                 _Has_Rendered_Stats_UC_After_Refresh = false;
+
+                Update_Reload();
 
                 Update_Characters_UserControl();  // This is reasonably fast, even when the number of characters is large.
 

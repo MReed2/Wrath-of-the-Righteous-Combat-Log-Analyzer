@@ -169,20 +169,23 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             bw.RunWorkerAsync();
         }
 
-        public void Update_Reload()
+        public void Update_Reload(CombatEventContainer sender = null)
         {
             CombatStartEvent prev_combat = null;
 
-            _Root_TreeViewItem.Header = Regex.Replace((string)_Root_TreeViewItem.Header, @"\((\d*.*?),", string.Format("({0} Reloads,", ((CombatEventContainer)_Root_TreeViewItem.Tag).Reload_Cnt));
-
-            foreach (LoadingAwareTreeViewItem curr_file_tvi in _Root_TreeViewItem.Items)
+            if (_Root_TreeViewItem != null)
             {
-                curr_file_tvi.Header = Regex.Replace((string)curr_file_tvi.Header, @"\((\d*.*?),", string.Format("({0} Reloads,", ((CombatEventContainer)curr_file_tvi.Tag).Reload_Cnt));
+                _Root_TreeViewItem.Header = Regex.Replace((string)_Root_TreeViewItem.Header, @"\((\d*.*?),", string.Format("({0} Reloads,", ((CombatEventContainer)_Root_TreeViewItem.Tag).Reload_Cnt));
 
-                foreach (LoadingAwareTreeViewItem curr_combat in curr_file_tvi.Items)
+                foreach (LoadingAwareTreeViewItem curr_file_tvi in _Root_TreeViewItem.Items)
                 {
-                    prev_combat = ((CombatStartEvent)curr_combat.Tag);
-                    curr_combat.Header = Regex.Replace((string)curr_combat.Header, @"\((\d*.*?),", string.Format("({0} Reloads,", ((CombatEventContainer)curr_combat.Tag).Reload_Cnt));
+                    curr_file_tvi.Header = Regex.Replace((string)curr_file_tvi.Header, @"\((\d*.*?),", string.Format("({0} Reloads,", ((CombatEventContainer)curr_file_tvi.Tag).Reload_Cnt));
+
+                    foreach (LoadingAwareTreeViewItem curr_combat in curr_file_tvi.Items)
+                    {
+                        prev_combat = ((CombatStartEvent)curr_combat.Tag);
+                        curr_combat.Header = Regex.Replace((string)curr_combat.Header, @"\((\d*.*?),", string.Format("({0} Reloads,", ((CombatEventContainer)curr_combat.Tag).Reload_Cnt));
+                    }
                 }
             }
         }
@@ -194,6 +197,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             CombatEventContainer tmp = new CombatEventContainer(-1, -1, "");
             tmp.OnNeedToCalculateStats += NeedToCalculateStats;
             tmp.OnNeedToUpdateCharacterLists += NeedToUpdateCharacterLists;
+            tmp.OnReloadUpdated += OnReloadUpdated;
 
             _Root_TreeViewItem = new LoadingAwareTreeViewItem() { Header = "All (0 Events)", Tag = tmp, IsExpanded = true };
             MasterTreeView.Items.Add(_Root_TreeViewItem);
@@ -208,6 +212,11 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             _Last_Combat_Start_TreeViewItem = null;
             _Combat_Event_Cnt = 0;
+        }
+
+        private void OnReloadUpdated(CombatEventContainer sender)
+        {
+            Dispatcher.BeginInvoke(new ReloadUpdated(Update_Reload), sender);
         }
 
         private void ResetCurrentFile()
@@ -232,6 +241,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 _File_Combat_Cnt = 0;
 
                 _Last_File_Start_TreeView_Item.Items.Clear();
+                _Root_TreeViewItem.Items.Remove(_Last_File_Start_TreeView_Item);
+                _Last_File_Start_TreeView_Item = null;
 
                 UpdateNamesOfKeyNodes();
 
@@ -279,6 +290,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     CombatEventContainer tmp = new CombatEventContainer(_Root_File_Cnt, -1, inFilename);
                     tmp.OnNeedToCalculateStats += NeedToCalculateStats;
                     tmp.OnNeedToUpdateCharacterLists += NeedToUpdateCharacterLists;
+                    tmp.OnReloadUpdated += OnReloadUpdated;
 
                     _Last_File_Start_TreeView_Item = new LoadingAwareTreeViewItem()
                     {
@@ -307,6 +319,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
                     ((CombatStartEvent)newCombatEvent).OnNeedToCalculateStats += NeedToCalculateStats;
                     ((CombatStartEvent)newCombatEvent).OnNeedToUpdateCharacterLists += NeedToUpdateCharacterLists;
+                    ((CombatStartEvent)newCombatEvent).OnReloadUpdated += OnReloadUpdated;
 
                     if (_Last_Combat_Start_TreeViewItem != null)
                     {
@@ -364,6 +377,11 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     UpdateNamesOfKeyNodes();
                 }
             }
+        }
+
+        private void Tmp_OnReloadUpdated1(CombatEventContainer sender)
+        {
+            throw new NotImplementedException();
         }
 
         private void CombatLog_Parser_OnNewCombatEvent(CombatEvent newCombatEvent, string inFilename)

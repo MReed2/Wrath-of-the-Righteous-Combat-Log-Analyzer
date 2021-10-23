@@ -324,7 +324,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     if ((_Number_Of_Consecutive_Events_Loaded > 500)&&(_Consecutive_Idle_Parser_Loops==0)) { _Consecutive_Idle_Parser_Loops = 50; }
                     if (_Consecutive_Idle_Parser_Loops == 50) // (50*50) = 2500 ms = 2.5 seconds of idle time
                     {
-                        _Curr_Start_Of_Combat.Prev_CombatEventContainer = _Prev_Start_Of_Combat;
+                        if (_Curr_Start_Of_Combat != null) { _Curr_Start_Of_Combat.Prev_CombatEventContainer = _Prev_Start_Of_Combat; }
 
                         string status_str = String.Format(
                             "Removed {0} duplicates, added {1} events ({2} Attacks, {3} Damages, {4} Healing, {5} Initiative, {6} Simple, {7} Other)",
@@ -414,6 +414,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             line = System.Text.RegularExpressions.Regex.Replace(line, @"(<color=(.*?)>)", "<span style=\"color:$2\">");
             line = line.Replace("</color>", "</span>");
             line = line.Replace("  ", "\t\t");
+            line = System.Text.RegularExpressions.Regex.Replace(line, @"((CR\d*\x5f)CR\d*\x5f)", "$2"); // CRxxxx_CRxxxx_xxxxx => CRxxxx_xxxx
 
             int tab_count = line.Length - line.Replace("\t", "").Length;
 
@@ -466,13 +467,13 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 line = short_div_txt + tmp.Groups[1].Value + "</div>\n" + div_tag_txt + "\t\t" + tmp.Groups[2].Value + "</div>";
             }
             // 	<b>Armor Class: 20 (Flat-footed)</b>  Base value: 10  Deflection: <color=#004604>+1 [Ring of Protection +1]</color>
-            else if ( line.Contains("Armor Class:") && (colon_count == 3) && (!line.Contains("Natural 1.")) && (!line.Contains("Natural 20.")) && (!line.Contains("Natural <s>1</s> 20")) )
+            else if ( line.Contains("Armor Class:") && (colon_count == 3) && (!System.Text.RegularExpressions.Regex.Match(line, @"( Natural .*?\.)").Success) )
             {
                 System.Text.RegularExpressions.Match tmp = System.Text.RegularExpressions.Regex.Match(line, @"\s(.*?)\s\s(.*?)\s\s(.*)");
                 line = div_tag_txt + tmp.Groups[1].Value + "</div>\n" + long_div_txt + "\t\t" + tmp.Groups[2].Value + "</div>\n" + long_div_txt + "\t\t" + tmp.Groups[3].Value + "</div>";
             }
             //	<b>Armor Class: 10 (Flat-footed, Touch)</b>  Base value: 10
-            else if (line.Contains("Armor Class:") && (colon_count == 2) && (!line.Contains("Natural 1.")) && (!line.Contains("Natural 20.")) && (!line.Contains("Natural <s>1</s> 20")) )
+            else if (line.Contains("Armor Class:") && (colon_count == 2) && (!System.Text.RegularExpressions.Regex.Match(line, @"( Natural .*?\.)").Success) )
             {
                 System.Text.RegularExpressions.Match tmp = System.Text.RegularExpressions.Regex.Match(line, @"\s(.*?)\s\s(.*)");
                 line = div_tag_txt + tmp.Groups[1].Value + "</div>\n" + long_div_txt + "\t\t" + tmp.Groups[2].Value + "</div>";

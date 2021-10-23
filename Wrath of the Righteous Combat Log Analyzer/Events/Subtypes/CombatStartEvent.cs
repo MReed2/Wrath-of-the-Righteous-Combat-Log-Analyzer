@@ -95,10 +95,11 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 }
             }
 
-            if ((IsReload)&&(loop_cnt > 0))
+            if (IsReload)
             {
                 prev_CSS = (CombatStartEvent)Prev_CombatEventContainer;
                 while (loop_cnt > 0) { prev_CSS = (CombatStartEvent)prev_CSS.Prev_CombatEventContainer; loop_cnt--; }
+                while ((prev_CSS.Reload_Cnt > 0)&&(prev_CSS.Prev_CombatEventContainer != null)) { prev_CSS = (CombatStartEvent)prev_CSS.Prev_CombatEventContainer; loop_cnt--; }
 
                 CombatStartEvent next_CSS = (CombatStartEvent)prev_CSS.Next_CombatEventContainer;
                 do

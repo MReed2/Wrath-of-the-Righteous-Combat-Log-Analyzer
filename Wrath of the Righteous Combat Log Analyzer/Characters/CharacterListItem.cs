@@ -27,6 +27,9 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private CombatEventList _VFR_Hostile_CombatEvents = new CombatEventList();
         private CombatEventList _VFR_Other_CombatEvents = new CombatEventList();
 
+        private CombatEventList _VFR_Damage_Friendly = new CombatEventList();
+        private CombatEventList _VFR_Damage_Hostile = new CombatEventList();
+
         /// <summary>Fires when certain key fields (Character_Name, Friendly_Name, Character_Type, Target_Character_Name, Target_Friendly_Name, and Target_Character_Type) are updated for direct children</summary>
         public event CombatEventChanged OnCombatEventChanged;
 
@@ -176,6 +179,10 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             _VFR_Friendly_CombatEvents.Clear();
             _VFR_Hostile_CombatEvents.Clear();
             _VFR_Other_CombatEvents.Clear();
+
+            _VFR_Damage_Friendly.Clear();
+            _VFR_Damage_Hostile.Clear();
+
             changed_cnt=0;
 
             CombatEventList all_events = Get_All_CombatEvents();
@@ -183,7 +190,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             foreach (CombatEvent curr_evnt_tmp in all_events)
             {
                 if (!(curr_evnt_tmp is CombatEventTargeted)) { continue; }
-                if (curr_evnt_tmp is DamageEvent) { continue; } // Ignore DamageEvents -- no conclusions as to friendly / hostile can be drawn from them
 
                 CombatEventTargeted curr_evnt = (CombatEventTargeted)curr_evnt_tmp;
                 if (curr_evnt.Friendly_Name == Friendly_Name)
@@ -192,8 +198,21 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
                     CombatEvent.Char_Enum proposed_char_type = curr_evnt.Character_Type_From_Target();
 
-                    if (proposed_char_type == CombatEvent.Char_Enum.Friendly) { _VFR_Friendly_CombatEvents.Add(curr_evnt); }
-                    else if (proposed_char_type == CombatEvent.Char_Enum.Hostile) { _VFR_Hostile_CombatEvents.Add(curr_evnt); }
+                    if (proposed_char_type == CombatEvent.Char_Enum.Friendly)
+                    {
+                        if (curr_evnt is AttackEvent) { _VFR_Friendly_CombatEvents.Add(curr_evnt); }
+                        else if (curr_evnt is HealingEvent) { _VFR_Friendly_CombatEvents.Add(curr_evnt); }
+                        else if (curr_evnt is DamageEvent) { _VFR_Damage_Friendly.Add(curr_evnt); }
+                        else { _VFR_Other_CombatEvents.Add(curr_evnt); }
+
+                    }
+                    else if (proposed_char_type == CombatEvent.Char_Enum.Hostile)
+                    {
+                        if (curr_evnt is AttackEvent) { _VFR_Hostile_CombatEvents.Add(curr_evnt); }
+                        else if (curr_evnt is HealingEvent) { _VFR_Hostile_CombatEvents.Add(curr_evnt); }
+                        else if (curr_evnt is DamageEvent) { _VFR_Damage_Hostile.Add(curr_evnt); }
+                        else { _VFR_Other_CombatEvents.Add(curr_evnt); }
+                    }
                     else { _VFR_Other_CombatEvents.Add(curr_evnt); }
                 }
                 else
@@ -203,23 +222,24 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     CombatEvent.Char_Enum proposed_target_char_type = curr_evnt.Character_Type_From_Target();
 
                     // Some processing is required here -- what we have is the *source* type, but what we want is the *target* type.
-                    if (curr_evnt_tmp is AttackEvent)
+
+                    // Attacks are aimed at people of the opposing faction, generally.
+                    // Heals are aimed at people of the same faction, generally.
+                    // Damage is aimed at people of the opposing factiong, **very** generally.
+
+                    if (proposed_target_char_type == CombatEvent.Char_Enum.Friendly)
                     {
-                        // Attacks are aimed at people of the opposing faction, generally.
-                        if (proposed_target_char_type == CombatEvent.Char_Enum.Friendly) { _VFR_Hostile_CombatEvents.Add(curr_evnt); }
-                        else if (proposed_target_char_type == CombatEvent.Char_Enum.Hostile) { _VFR_Friendly_CombatEvents.Add(curr_evnt); }
+                        if (curr_evnt is AttackEvent) { _VFR_Hostile_CombatEvents.Add(curr_evnt); }
+                        else if (curr_evnt is HealingEvent) { _VFR_Friendly_CombatEvents.Add(curr_evnt); }
+                        else if (curr_evnt is DamageEvent) { _VFR_Damage_Hostile.Add(curr_evnt); }
                         else { _VFR_Other_CombatEvents.Add(curr_evnt); }
                     }
-                    else if (curr_evnt_tmp is HealingEvent)
+                    else if (proposed_target_char_type == CombatEvent.Char_Enum.Hostile)
                     {
-                        // Heals are aimed at people of the same faction, generally.
-                        if (proposed_target_char_type == CombatEvent.Char_Enum.Friendly) { _VFR_Friendly_CombatEvents.Add(curr_evnt); }
-                        else if (proposed_target_char_type == CombatEvent.Char_Enum.Hostile) { _VFR_Hostile_CombatEvents.Add(curr_evnt); }
+                        if (curr_evnt is AttackEvent) { _VFR_Friendly_CombatEvents.Add(curr_evnt); }
+                        else if (curr_evnt is HealingEvent) { _VFR_Hostile_CombatEvents.Add(curr_evnt); }
+                        else if (curr_evnt is DamageEvent) { _VFR_Damage_Friendly.Add(curr_evnt); }
                         else { _VFR_Other_CombatEvents.Add(curr_evnt); }
-                    }
-                    else // DamageEvents, which aren't considered for voting, due to AOE effects that indiscriminately target foes and allies.
-                    {
-                        _VFR_Other_CombatEvents.Add(curr_evnt);
                     }
                 }
             }
@@ -244,7 +264,22 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
             else
             {
-                if (show_debug_lines) System.Diagnostics.Debug.WriteLine("\tVFR: {0} isn't classified due to a tie ({1} Friendly, {2} Hostile, {3} Other)", Source_Character_Name, _VFR_Friendly_CombatEvents.Count, _VFR_Hostile_CombatEvents.Count, _VFR_Other_CombatEvents.Count);
+                string str = string.Format("\tVFR: {0} tie ({1} Friendly == {2} Hostile, {3} Other)", Source_Character_Name, _VFR_Friendly_CombatEvents.Count, _VFR_Hostile_CombatEvents.Count, _VFR_Other_CombatEvents.Count);
+
+                if (_VFR_Damage_Hostile.Count > _VFR_Damage_Friendly.Count)
+                {
+                    if (show_debug_lines) System.Diagnostics.Debug.WriteLine("{0}, assigned hostile based on damage ({1} Friendly < {2} Hostile).", str, _VFR_Damage_Friendly.Count, _VFR_Damage_Hostile.Count);
+                    changed_cnt = Set_Character_Type(CombatEvent.Char_Enum.Hostile);
+                }
+                else if (_VFR_Damage_Friendly.Count > _VFR_Damage_Hostile.Count)
+                {
+                    if (show_debug_lines) System.Diagnostics.Debug.WriteLine("{0}, assigned friendly based on damage ({1} Friendly > {2} Hostile).", str, _VFR_Damage_Friendly.Count, _VFR_Damage_Hostile.Count);
+                    changed_cnt = Set_Character_Type(CombatEvent.Char_Enum.Friendly);
+                }
+                else
+                {
+                    if (show_debug_lines) System.Diagnostics.Debug.WriteLine("{0}, still tie after considering damage ({1} Friendly == {2} Hostile).", str, _VFR_Damage_Friendly.Count, _VFR_Damage_Hostile.Count);
+                }
             }
 
             //System.Diagnostics.Debug.WriteLine("Updated {0} combat events", changed_cnt);

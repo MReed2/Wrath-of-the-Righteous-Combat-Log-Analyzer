@@ -304,6 +304,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 //
                 //<div style="margin-left:   0px"><b><b><span style="color:#1356B1">Arueshalae_Companion[41735ffc]</span></b></b> attacks <b><b><span style="color:#262626"></span></b></b> with <b>Eye for an Eye</b>. Critical hit! Sneak attack!</div>
                 //
+
                 Source += line + "\n";
 
                 Match attack_hdr = Regex.Match(line, @"(?:\x22>.*?){2}(.*?)<.*?\x22>(.*?)<.*h .*?>(.*?)<.*? (.*?)<");
