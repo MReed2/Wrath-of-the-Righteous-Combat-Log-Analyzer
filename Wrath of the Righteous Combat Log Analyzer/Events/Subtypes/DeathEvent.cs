@@ -39,10 +39,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         private void Update_Death()
         {
-            if (Source_Character_Name == "CR16_IncubusToughMelee[d397d1d3]")
-            {
-                int kdkd = 1;
-            }
             if (Prev_CombatEvent != null)
             {
                 if ((Prev_CombatEvent is SimpleEvent) && (((SimpleEvent)Prev_CombatEvent).Subtype == "Experience"))

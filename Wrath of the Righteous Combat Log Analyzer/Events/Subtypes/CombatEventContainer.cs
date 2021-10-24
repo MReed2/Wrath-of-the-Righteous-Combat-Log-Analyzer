@@ -75,6 +75,9 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private bool _Has_Rendered_Stats_UC_After_Refresh = false;
         private bool _Updating_Characters_List = false;
 
+        private CombatEventContainer _Cached_Prev_CombatEventContainer = null;
+        private CombatEventContainer _Cached_Next_CombatEventContainer = null;
+
         private bool _Characters_Updating_Async = false;
         private bool _Stats_Updating_Async = false;
         private bool _Children_Changed = false;
@@ -95,12 +98,18 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         {
             get
             {
-                CombatEvent tmp_event = this;
+                if (_Cached_Prev_CombatEventContainer == null)
+                {
+                    CombatEvent tmp_event = this;
 
-                while ((tmp_event != null)&&(!(tmp_event.Prev_CombatEvent is CombatEventContainer))) { tmp_event = tmp_event.Prev_CombatEvent; }
+                    while ((tmp_event != null) && (!(tmp_event.Prev_CombatEvent is CombatEventContainer))) { tmp_event = tmp_event.Prev_CombatEvent; }
 
-                if (tmp_event == null) { return null; }
-                else { return (CombatEventContainer)tmp_event.Prev_CombatEvent; }
+                    if (tmp_event == null) { _Cached_Prev_CombatEventContainer = null; }
+                    else { _Cached_Prev_CombatEventContainer = (CombatEventContainer)tmp_event.Prev_CombatEvent; }
+                }           
+
+                return _Cached_Prev_CombatEventContainer;
+
             }
         }
 
@@ -108,12 +117,17 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         {
             get
             {
-                CombatEvent tmp_event = this;
+                if (_Cached_Next_CombatEventContainer == null)
+                {
+                    CombatEvent tmp_event = this;
 
-                while ((tmp_event != null) && (!(tmp_event.Next_CombatEvent is CombatEventContainer))) { tmp_event = tmp_event.Next_CombatEvent; }
+                    while ((tmp_event != null) && (!(tmp_event.Next_CombatEvent is CombatEventContainer))) { tmp_event = tmp_event.Next_CombatEvent; }
 
-                if (tmp_event == null) { return null; }
-                else { return (CombatEventContainer)tmp_event.Next_CombatEvent; }
+                    if (tmp_event == null) { _Cached_Next_CombatEventContainer = null; }
+                    else { _Cached_Next_CombatEventContainer = (CombatEventContainer)tmp_event.Next_CombatEvent; }
+                }
+
+                return _Cached_Next_CombatEventContainer;
             }
         }
                
@@ -196,6 +210,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             Children.Clear();
             _Stats.Clear_Stats();
 
+            _Cached_Prev_CombatEventContainer = null;
+            _Cached_Next_CombatEventContainer = null;
 
             _Children_Count_When_Characters_Last_Refreshed = -1;
             _Children_Count_When_Stats_Last_Refreshed = -1;
