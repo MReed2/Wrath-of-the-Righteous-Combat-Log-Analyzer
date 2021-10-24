@@ -68,10 +68,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private CharacterList _Characters_Override = new CharacterList();
         private CharacterList _Characters = new CharacterList();
         private CombatStats _Stats = new CombatStats();
-
-        private CombatEventContainer _Prev_CombatEventContainer = null;
-        private CombatEventContainer _Next_CombatEventContainer = null;
-
+        
         private int _Children_Count_When_Characters_Last_Refreshed = -1;
         private int _Children_Count_When_Stats_Last_Refreshed = -1;
         private bool _Has_Rendered_Character_UC_After_Refresh = false;
@@ -94,6 +91,32 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         public CharacterList Characters_Override { get => _Characters_Override; }
 
+        public CombatEventContainer Prev_CombatEventContainer
+        {
+            get
+            {
+                CombatEvent tmp_event = this;
+
+                while ((tmp_event != null)&&(!(tmp_event.Prev_CombatEvent is CombatEventContainer))) { tmp_event = tmp_event.Prev_CombatEvent; }
+
+                if (tmp_event == null) { return null; }
+                else { return (CombatEventContainer)tmp_event.Prev_CombatEvent; }
+            }
+        }
+
+        public CombatEventContainer Next_CombatEventContainer
+        {
+            get
+            {
+                CombatEvent tmp_event = this;
+
+                while ((tmp_event != null) && (!(tmp_event.Next_CombatEvent is CombatEventContainer))) { tmp_event = tmp_event.Next_CombatEvent; }
+
+                if (tmp_event == null) { return null; }
+                else { return (CombatEventContainer)tmp_event.Next_CombatEvent; }
+            }
+        }
+               
         public virtual int Reload_Cnt
         {
             get => Children.Sum((x) => 
@@ -141,36 +164,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
         }
         
-        public CombatEventContainer Prev_CombatEventContainer
-        {
-            get => _Prev_CombatEventContainer;
-            set
-            {
-                if (value == null) { _Prev_CombatEventContainer = null; }
-                else
-                {
-                    _Prev_CombatEventContainer = value;
-                    if (_Prev_CombatEventContainer.Next_CombatEventContainer == null) { _Prev_CombatEventContainer.Next_CombatEventContainer = this; }
-                    else if (_Prev_CombatEventContainer.Next_CombatEventContainer != this) { throw new System.Exception("Inconsistency detected in \"Prev_CombatEventContainer\""); }
-                }
-            }
-        }
-
-        public CombatEventContainer Next_CombatEventContainer
-        {
-            get => _Next_CombatEventContainer;
-            set
-            {
-                if (value == null) { _Next_CombatEventContainer = null; }
-                else
-                {
-                    _Next_CombatEventContainer = value;
-                    if (_Next_CombatEventContainer.Prev_CombatEventContainer == null) { _Next_CombatEventContainer.Prev_CombatEventContainer = this; }
-                    else if (_Next_CombatEventContainer.Prev_CombatEventContainer != this) { throw new System.Exception("Inconsistency detected in \"Prev_CombatEventContainer\""); }
-                }
-            }
-        }
-
         public virtual bool Update_Reload()
         {
             bool rtn = false;
@@ -198,13 +191,11 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         public void Clear()
         {
             _Filename = "";
-            _Characters_Override.Clear();
+            // _Characters_Override.Clear();
             _Characters.Clear();
             Children.Clear();
             _Stats.Clear_Stats();
 
-            _Prev_CombatEventContainer = null;
-            _Next_CombatEventContainer = null;
 
             _Children_Count_When_Characters_Last_Refreshed = -1;
             _Children_Count_When_Stats_Last_Refreshed = -1;
@@ -736,6 +727,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         public void Force_Rebuild_Of_Character_Data()
         {
             _Children_Count_When_Characters_Last_Refreshed = -1;
+            _Characters_Override.Clear();
             _Characters.Clear();
             Update_Characters_List();
         }

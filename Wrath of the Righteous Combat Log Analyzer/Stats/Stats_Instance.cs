@@ -191,6 +191,12 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 else { _Characters.Add(inEvent.Character_Name); }
             }
 
+            if (inEvent is DeathEvent)
+            {
+                _Number_Killed += 1;
+                _Exp_Earned += ((DeathEvent)inEvent).Exp_Earned;
+            }
+
             if (inEvent is AttackEvent)
             {
                 // Margin analysis

@@ -257,33 +257,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                 );
         }
 
-        internal void Credit_Kill(string inKiller_Name, int inExp, string inKilled_Name, int inID)
-        {
-            if (inExp == 0)
-            {
-                System.Diagnostics.Debug.WriteLine("No experience found to match with death of \"{0}\", death ID: {1}", inKilled_Name, inID);
-            }
-            else if (inKiller_Name == null)
-            {
-                System.Diagnostics.Debug.WriteLine("No damage record found to match with death of \"{0}\", death ID: {1}", inKilled_Name, inID);
-            }
-            else
-            {
-                foreach (Stats_Instance curr_stat in _Stats_Categories)
-                {
-                    if (
-                        (curr_stat.Type_Description == "All") ||
-                        (curr_stat.Type_Description == "Friendly") ||
-                        (curr_stat.Type_Description == inKiller_Name)
-                        )
-                    {
-                        curr_stat.Credit_Kill(inKiller_Name, inExp, inKiller_Name);
-
-                    }
-                }
-            }
-        }
-
         private Stats_Instance Find_Stat_By_Catagory_Name(string inCatagory_Name)
         {
             Stats_Instance rtn = null;
@@ -346,10 +319,29 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         public bool Qualifies_For_Category(CombatEvent inEvent, Stats_Instance inStats_Catagory)
         {
             if (inStats_Catagory.Type_Description == "All") { return true; }
-            if ((inStats_Catagory.Type_Description == "Hostile") && (inEvent.Character_Type == CombatEvent.Char_Enum.Hostile)) { return true; }
-            if ((inStats_Catagory.Type_Description == "Friendly") && (inEvent.Character_Type == CombatEvent.Char_Enum.Friendly)) { return true; }
-            if ((inStats_Catagory.Type_Description == "Summons") && (inEvent.Character_Type == CombatEvent.Char_Enum.Summon)) { return true; }
 
+            if (inEvent is DeathEvent)
+            {
+                DeathEvent tmp = (DeathEvent)inEvent;
+
+                if (tmp.Death_Source != null)
+                {
+                    if ((inStats_Catagory.Type_Description == "Hostile") && (tmp.Death_Source.Character_Type == CombatEvent.Char_Enum.Hostile)) { return true; }
+                    if ((inStats_Catagory.Type_Description == "Friendly") && (tmp.Death_Source.Character_Type == CombatEvent.Char_Enum.Friendly)) { return true; }
+                    if ((inStats_Catagory.Type_Description == "Summons") && (tmp.Death_Source.Character_Type == CombatEvent.Char_Enum.Summon)) { return true; }
+                }
+                else
+                { // Assume the killers belong to the opposite factions.  Summons just get ignored altogether.
+                    if ((inStats_Catagory.Type_Description == "Hostile") && (tmp.Character_Type == CombatEvent.Char_Enum.Friendly)) { return true; }
+                    if ((inStats_Catagory.Type_Description == "Friendly") && (tmp.Character_Type == CombatEvent.Char_Enum.Hostile)) { return true; }
+                }
+            }
+            else
+            {
+                if ((inStats_Catagory.Type_Description == "Hostile") && (inEvent.Character_Type == CombatEvent.Char_Enum.Hostile)) { return true; }
+                if ((inStats_Catagory.Type_Description == "Friendly") && (inEvent.Character_Type == CombatEvent.Char_Enum.Friendly)) { return true; }
+                if ((inStats_Catagory.Type_Description == "Summons") && (inEvent.Character_Type == CombatEvent.Char_Enum.Summon)) { return true; }
+            }
             return false;
         }
 

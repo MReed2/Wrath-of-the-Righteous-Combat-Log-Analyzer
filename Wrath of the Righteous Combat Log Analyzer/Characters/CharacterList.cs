@@ -37,6 +37,12 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             return null;
         }
 
+        public new void Clear()
+        {
+            _All_Character_List.Clear();
+            base.Clear();
+        }
+
         public new void Add(CharacterListItem inItm)
         {
             CharacterListItem existing_itm = null;

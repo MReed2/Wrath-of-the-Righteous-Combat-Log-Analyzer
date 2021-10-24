@@ -80,6 +80,7 @@
     <Compile Include="Events\CombatEventList.cs" />
     <Compile Include="CombatLog_Parser.cs" />
     <Compile Include="Events\CombatEventTargeted.cs" />
+    <Compile Include="Events\Subtypes\DeathEvent.cs" />
     <Compile Include="Stats\CombatStats.cs" />
     <Compile Include="Events\Subtypes\CombatStartEvent.cs" />
     <Compile Include="Events\Subtypes\CombatEventContainer.cs" />

@@ -33,6 +33,38 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private int _Cached_Source_Hashcode = 0;
         private int _Cached_Source_String_Length = 0;
         private int _Combat_ID = 0;
+        private CombatEvent _Prev_CombatEvent = null;
+        private CombatEvent _Next_CombatEvent = null;
+
+        public virtual CombatEvent Prev_CombatEvent
+        {
+            get => _Prev_CombatEvent;
+            set
+            {
+                if (value == null) { _Prev_CombatEvent = null; }
+                else
+                {
+                    _Prev_CombatEvent = value;
+                    if (_Prev_CombatEvent.Next_CombatEvent == null) { _Prev_CombatEvent.Next_CombatEvent = this; }
+                    else if (_Prev_CombatEvent.Next_CombatEvent != this) { throw new System.Exception("Inconsistency detected in \"Prev_CombatEvent\""); }
+                }
+            }
+        }
+
+        public virtual CombatEvent Next_CombatEvent
+        {
+            get => _Next_CombatEvent;
+            set
+            {
+                if (value == null) { _Next_CombatEvent = null; }
+                else
+                {
+                    _Next_CombatEvent = value;
+                    if (_Next_CombatEvent.Prev_CombatEvent == null) { _Next_CombatEvent.Prev_CombatEvent = this; }
+                    else if (_Next_CombatEvent.Prev_CombatEvent != this) { throw new System.Exception("Inconsistency detected in \"Next_CombatEvent\""); }
+                }
+            }
+        }
 
         public int Cached_Source_Hashcode
         {

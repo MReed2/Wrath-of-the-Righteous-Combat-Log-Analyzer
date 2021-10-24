@@ -119,6 +119,10 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                         {
                             tmp = new CombatStartEvent(_Log.Count, inCombatID, line);
                         }
+                        else if (line.Contains("dies!"))  // Also still a SimpleEvent, but needs to be split out into its own class
+                        {
+                            tmp = new DeathEvent(_Log.Count, inCombatID, line);
+                        }
                         else
                         {
                             tmp = new SimpleEvent(_Log.Count, inCombatID, line);

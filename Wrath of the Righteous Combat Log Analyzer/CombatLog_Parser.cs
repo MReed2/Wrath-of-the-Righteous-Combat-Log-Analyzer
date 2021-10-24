@@ -235,6 +235,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
         static private CombatStartEvent _Curr_Start_Of_Combat = null;
         static private CombatStartEvent _Prev_Start_Of_Combat = null;
+        static private CombatEvent _Prev_CombatEvent = null;
 
         static public void Parse()
         {
@@ -271,13 +272,18 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                             {
                                 foreach (CombatEvent new_event in new_log_entry)
                                 {
+                                    if (_Prev_CombatEvent!=null)
+                                    {
+                                        new_event.Prev_CombatEvent = _Prev_CombatEvent;
+                                    }
+                                    _Prev_CombatEvent = new_event;
+                                    
                                     if (new_event is CombatStartEvent)
                                     {
                                         _Num_Of_Combats++;
                                         if (_Prev_Start_Of_Combat != null)
                                         {
                                             _Curr_Start_Of_Combat.Vote_For_Role();
-                                            _Curr_Start_Of_Combat.Prev_CombatEventContainer = _Prev_Start_Of_Combat;
                                             _Curr_Start_Of_Combat.Update_Reload();
                                         }
 
@@ -291,10 +297,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                                     else { throw new System.Exception("Invalid log -- log didn't start with a 'Combat Start' event"); }
 
                                     WriteDeDupFile(new_event);
-                                    if ((_CombatLog.Log.Count > 3) && (new_event is SimpleEvent) && (((SimpleEvent)new_event).Subtype == "Death"))
-                                    {
-                                        Dispatch_Death((SimpleEvent)new_event);
-                                    }
+
                                     num_total++;
                                     if (new_event is AttackEvent) { num_of_attacks++; }
                                     else if (new_event is DamageEvent) { num_of_damage++; }
@@ -324,8 +327,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                     if ((_Number_Of_Consecutive_Events_Loaded > 500)&&(_Consecutive_Idle_Parser_Loops==0)) { _Consecutive_Idle_Parser_Loops = 50; }
                     if (_Consecutive_Idle_Parser_Loops == 50) // (50*50) = 2500 ms = 2.5 seconds of idle time
                     {
-                        if (_Curr_Start_Of_Combat != null) { _Curr_Start_Of_Combat.Prev_CombatEventContainer = _Prev_Start_Of_Combat; }
-
                         string status_str = String.Format(
                             "Removed {0} duplicates, added {1} events ({2} Attacks, {3} Damages, {4} Healing, {5} Initiative, {6} Simple, {7} Other)",
                             _CombatLog.Duplicate_Count,
@@ -360,31 +361,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
 
             System.Diagnostics.Debug.WriteLine("Thread exited normally");
         }
-
-        private static void Dispatch_Death(SimpleEvent new_event)
-        {
-            SimpleEvent curr_event = (SimpleEvent)new_event;
-            SimpleEvent prev_event = _CombatLog.Log[_CombatLog.Log.Count - 2] as SimpleEvent;
-            CombatEvent killer_event = null;
-            int exp_awarded = 0;
-
-            if ((prev_event != null)&&(prev_event.Subtype == "Experience"))
-            {
-                exp_awarded = int.Parse(System.Text.RegularExpressions.Regex.Match(_CombatLog.Log[_CombatLog.Log.Count - 2].Source, @"<b>(\d*)<\/b>").Groups[1].Value);
-                if (exp_awarded == 0) { exp_awarded = -2; } // Sometimes, 0 xp is awarded for killing various things.  I use 0 xp to mark a warning (no exp found), but don't warn for negative xp (and don't add it to the running total), so...
-                killer_event = _CombatLog.Log[_CombatLog.Log.Count - 3];
-            }
-            else
-            {
-                if (curr_event.Character_Name.Contains("Summon")) { exp_awarded = -1; } else { exp_awarded = 0; }
-                killer_event = _CombatLog.Log[_CombatLog.Log.Count - 2];
-            }
-
-            if (killer_event is DamageEvent) { _CombatLog.Stats.Credit_Kill(killer_event.Character_Name, exp_awarded, curr_event.Character_Name, curr_event.ID); }
-            else if (killer_event is AttackEvent) { _CombatLog.Stats.Credit_Kill(killer_event.Character_Name, exp_awarded, curr_event.Character_Name, curr_event.ID); }
-            else { _CombatLog.Stats.Credit_Kill(null, exp_awarded, curr_event.Character_Name, curr_event.ID); }
-        }
-
+        
         private static void WriteDeDupFile()
         {
             foreach (CombatEvent curr_event in _CombatLog.Log)
