@@ -133,11 +133,27 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                
         public virtual int Reload_Cnt
         {
+            get
+            {
+                int sum = 0;
+
+                foreach (CombatEvent curr_evnt in Children)
+                {
+                    if (curr_evnt is CombatStartEvent)
+                    {
+                        if (((CombatStartEvent)curr_evnt).IsReload) { sum += 1; }
+                    }
+                    else if (curr_evnt is CombatEventContainer) { sum += ((CombatEventContainer)curr_evnt).Reload_Cnt; }
+                }
+
+                return sum;
+            }
+            /*
             get => Children.Sum((x) => 
             
                 ((x is CombatStartEvent) && ((CombatStartEvent)x).IsReload) ? 1 : 
                   !(x is CombatStartEvent)&&(x is CombatEventContainer) ? ((CombatEventContainer)x).Reload_Cnt : 0
-            );
+            );*/
             protected set => throw new System.NotImplementedException();
         }
 

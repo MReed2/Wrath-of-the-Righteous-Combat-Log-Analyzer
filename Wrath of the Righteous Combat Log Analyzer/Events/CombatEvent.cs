@@ -141,8 +141,8 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         {
             get
             {
-                if (_Friendly_Name != "") { return _Friendly_Name; }
-                else { return CleanupName(Character_Name); }
+                if (_Friendly_Name == "") { _Friendly_Name = CleanupName(Source_Character_Name); }
+                return _Friendly_Name;
             }
             set
             {

@@ -87,7 +87,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
                         _Stats.Process_Event(_Current_Event);
                     }
                     _Current_Event = null;
-
                 }
 
                 if (line.Contains("Initiative check"))
@@ -210,7 +209,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             else if ((event1 is DamageEvent) && ((DamageEvent)event1).Is_Maximized) { return null; }
             else if (event1.Cached_Source_Hashcode != event2.Cached_Source_Hashcode) { return null; }
             else if (event1.Source != event2.Source) { return null; }
-            else { return event1; }
+            else { return event2; }
         }
 
         private CombatEvent DupCheck(CombatEvent event1, CombatEventList event2List)
@@ -220,10 +219,7 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             foreach (CombatEvent event2 in event2List)
             {
                 tmp = DupCheck(event1, event2);
-                if (tmp != null)
-                {
-                    return tmp;
-                }
+                if (tmp != null) { return tmp; }
             }
 
             return null;

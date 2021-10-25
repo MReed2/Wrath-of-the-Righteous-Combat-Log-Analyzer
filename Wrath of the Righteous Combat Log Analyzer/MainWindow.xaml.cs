@@ -214,11 +214,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             _Combat_Event_Cnt = 0;
         }
 
-        private void OnReloadUpdated(CombatEventContainer sender)
-        {
-            Dispatcher.BeginInvoke(new ReloadUpdated(Update_Reload), sender);
-        }
-
         private void ResetCurrentFile()
         {
             if ((_Last_File_Start_TreeView_Item == null)||(_Last_File_Start_TreeView_Item==null)) { InitRootNode(); }
@@ -250,22 +245,31 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
         }
 
+        // This is ***SO*** much faster than using string.Format to produce the same strings.  To the point of absurdity -- trying to use String.Format was resulting in **0** frames for the UI
+        // thread, especially for the root node.  I spent loads of time trying to figure out *why* the UI thread was blocking when everything CPU expensive should be in the parse (non-UI) thread.
+
+        private string Build_Root_Node_Header_Paren_String()
+        {
+            return "(" + ((CombatEventContainer)_Root_TreeViewItem.Tag).Reload_Cnt.ToString() + " Reloads, " + _Root_File_Cnt.ToString() + " Files, " + _Root_Combat_Cnt.ToString() + " Combats, " + _Root_Event_Cnt.ToString() + " Events)";
+        }
+
+        private string Build_File_Node_Header_Paren_String()
+        {
+            return "(" + ((CombatEventContainer)_Last_File_Start_TreeView_Item.Tag).Reload_Cnt.ToString() + " Reloads, " + _File_Combat_Cnt.ToString() + " Combats, " + _File_Event_Cnt.ToString() + " Events)";
+        }
+
+        private string Build_Combat_Start_Node_Header_Paren_String()
+        {
+            return "(" + ((CombatStartEvent)_Last_Combat_Start_TreeViewItem.Tag).Reload_Cnt.ToString()+" Reloads, "+_Combat_Event_Cnt.ToString()+" Events)";
+        }
+
         private void UpdateNamesOfKeyNodes()
         {
             if (_Root_TreeViewItem != null)
-            { _Root_TreeViewItem.Header = Regex.Replace((string)_Root_TreeViewItem.Header, @"(\(.*\))", "") + String.Format("({0} Reloads, {1} Files, {2} Combats, {3} Events)", ((CombatEventContainer)_Root_TreeViewItem.Tag).Reload_Cnt, _Root_File_Cnt, _Root_Combat_Cnt, _Root_Event_Cnt); }
+            { _Root_TreeViewItem.Header = Regex.Replace((string)_Root_TreeViewItem.Header, @"(\(.*\))", "") + Build_Root_Node_Header_Paren_String(); }
             if (_Last_File_Start_TreeView_Item != null)
-            { _Last_File_Start_TreeView_Item.Header = Regex.Replace((string)_Last_File_Start_TreeView_Item.Header, @"(\(.*\))", "") + String.Format("({0} Reloads, {1} Combats, {2} Events)", ((CombatEventContainer)_Last_File_Start_TreeView_Item.Tag).Reload_Cnt, _File_Combat_Cnt, _File_Event_Cnt); }
-            if (_Last_Combat_Start_TreeViewItem != null)
-            {
-                _Last_Combat_Start_TreeViewItem.Header = Regex.Replace((string)_Last_Combat_Start_TreeViewItem.Header, @"(\(.*\))", "") + 
-                    String.Format
-                    (
-                        "({0} Reloads, {1} Events)", 
-                        ((CombatStartEvent)_Last_Combat_Start_TreeViewItem.Tag).Reload_Cnt,
-                        _Combat_Event_Cnt
-                    );
-            }
+            { _Last_File_Start_TreeView_Item.Header = Regex.Replace((string)_Last_File_Start_TreeView_Item.Header, @"(\(.*\))", "") + Build_File_Node_Header_Paren_String(); }
+            if (_Last_Combat_Start_TreeViewItem != null) { _Last_Combat_Start_TreeViewItem.Header = Regex.Replace((string)_Last_Combat_Start_TreeViewItem.Header, @"(\(.*\))", "") + Build_Combat_Start_Node_Header_Paren_String(); }
         }
 
         private void AddNewItemToMasterTreeView(CombatEvent newCombatEvent, string inFilename)
@@ -379,11 +383,6 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
             }
         }
 
-        private void Tmp_OnReloadUpdated1(CombatEventContainer sender)
-        {
-            throw new NotImplementedException();
-        }
-
         private void CombatLog_Parser_OnNewCombatEvent(CombatEvent newCombatEvent, string inFilename)
         {
             Dispatcher.BeginInvoke(new NewCombatEvent(AddNewItemToMasterTreeView), newCombatEvent, inFilename);
@@ -402,6 +401,11 @@ namespace Wrath_of_the_Righteous_Combat_Log_Analyzer
         private void CombatLog_Parser_OnCurrentFileChanged(string inFilename)
         {
             Dispatcher.BeginInvoke(new Current_File_Changed(OnCurrentFileChanged), inFilename);
+        }
+
+        private void OnReloadUpdated(CombatEventContainer sender)
+        {
+            Dispatcher.BeginInvoke(new ReloadUpdated(Update_Reload), sender);
         }
 
         private void MasterTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
